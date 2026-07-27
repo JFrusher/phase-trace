@@ -329,7 +329,7 @@ def set_piece_record(reason: str, feed_team: str, secured_team: str,
 
 def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
                      cal: PitchCalibration = PitchCalibration(),
-                     flip: bool = False) -> list[dict]:
+                     start_reason: str = None, flip: bool = False) -> list[dict]:
     """One dict per segment: the rich per-action stream for the raw export.
 
     Parallel to chain_to_events, which collapses segments into phase_sequences
@@ -337,6 +337,11 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
     coach gets per-action detail. chain.segments must already be tap-applied
     and team-assigned. Optional fields (linebreak/intercepted/player) are only
     present when set, so a partially-tagged chain is still valid data.
+
+    `start_reason` (this possession's origin) is stamped on the first action,
+    mirroring chain_to_events putting it on the first sub-chain. It lets the
+    raw-export momentum reconstruction apply origin_factor and match the
+    phase_sequence chart, which the flat action stream otherwise can't see.
 
     `flip` (second half) folds the exported coordinates into the first-half
     frame and reports attack_dir in that same frame, so a team attacks the
@@ -377,4 +382,6 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
         if player is not None:
             ev["player"] = player
         out.append(ev)
+    if out and start_reason:
+        out[0]["start_reason"] = start_reason
     return out

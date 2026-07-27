@@ -85,6 +85,21 @@ def test_kick_attributes_to_kicking_team_receiver_to_other():
     assert acts[2]["team"] == "WAL"
 
 
+def test_start_reason_stamped_on_first_action_only():
+    acts = chain_to_actions(make_chain([
+        seg("CARRY", 10, 20, 100.0, 102.5),
+        seg("CARRY", 20, 30, 102.5, 104.0),
+    ]), NAMES, attack_dir_home=1, start_reason="lineout")
+    assert acts[0]["start_reason"] == "lineout"
+    assert "start_reason" not in acts[1]
+
+
+def test_start_reason_absent_when_not_given():
+    acts = chain_to_actions(make_chain([seg("CARRY", 10, 20, 100.0, 102.5)]),
+                            NAMES, attack_dir_home=1)
+    assert "start_reason" not in acts[0]
+
+
 def test_empty_chain_yields_no_actions():
     assert chain_to_actions(make_chain([]), NAMES, attack_dir_home=1) == []
 

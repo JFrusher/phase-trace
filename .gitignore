@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 tracer/sessions/
 tracer/dev_traces/
+exports/
 legacy/tagger/node_modules/
 legacy/tagger/dist/
 .playwright-mcp/

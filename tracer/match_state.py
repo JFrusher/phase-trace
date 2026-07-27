@@ -310,7 +310,8 @@ class MatchState:
             start_reason=began_as, flip=flip)
         self.events.extend(new_events)
         self.actions.extend(chain_to_actions(
-            chain, self.team_names, self.attack_dir_home, self.cal, flip=flip))
+            chain, self.team_names, self.attack_dir_home, self.cal,
+            start_reason=began_as, flip=flip))
         # a chain that BEGAN at a set piece records its outcome: the awarded
         # team (possession at mouse_down) fed it; chain.team came away with it
         sp = set_piece_record(began_as, self._chain_start_team, chain.team,

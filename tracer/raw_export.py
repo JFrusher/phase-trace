@@ -152,7 +152,8 @@ def team_summary(events: list[dict], actions: list[dict], team_names: dict) -> d
 _ACTION_COLS = ["minute", "type", "team", "player", "kind", "outcome", "reason",
                 "metres_gained", "start_x_m", "start_y_m", "end_x_m", "end_y_m",
                 "x_m", "y_m",   # single-point position for discrete events
-                "end_metres_from_line", "attack_dir", "linebreak", "intercepted",
+                "end_metres_from_line", "attack_dir", "start_reason",
+                "linebreak", "intercepted",
                 "conceded_by", "assist", "label"]
 # positions.csv: every located thing as one point row. A carry/pass/kick uses
 # its start as the point (with its end kept), a discrete event its own x_m/y_m.
@@ -213,7 +214,12 @@ def _plain(summ: dict) -> dict:
 
 def export_raw(out_dir, meta: dict, team_names: dict,
                events: list[dict], actions: list[dict]) -> str:
-    """Write actions.csv, players.csv, team.csv, match.json into out_dir."""
+    """Write actions.csv, players.csv, team.csv, positions.csv, match.json.
+
+    positions.csv is a spreadsheet convenience (one located point per row); the
+    bundled report reads positions from the match.json action stream, not from
+    this file.
+    """
     stream = action_stream(events, actions)
     players = player_rows(stream)
     team = team_summary(events, actions, team_names)

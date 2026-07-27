@@ -6,9 +6,11 @@
    the static weight table. Impulses are fed through the same exponential-decay +
    Gaussian-smoothing engine as core/engine.py.
 
-   ponytail: origin_factor is fixed at 1.0 — start_reason isn't in the export.
-   This is an approximation of the official phase_sequence momentum, not a
-   reproduction. */
+   The weighting reproduces the phase_sequence chart: start_reason is stamped
+   on each possession's first action, so origin_factor applies exactly as in
+   rugby.py. The only remaining approximation is the time axis — trace pace and
+   match clock are structurally unlinkable, so x is minutes-if-usable else
+   play sequence. */
 (function (MR) {
   "use strict";
 
@@ -18,16 +20,22 @@
     penalty_kick: 1.0, drop_goal: 1.1, turnover_won: 0.5, penalty_won: 0.6,
     _default: 0.4
   };
+  var ORIGIN_FACTOR = {
+    interception: 1.3, penalty: 1.25, lineout: 1.15, turnover_open: 1.1,
+    scrum: 1.0, kick_return: 0.95, restart: 0.9, kickoff: 0.9, drop_out_22: 0.85
+  };
   var SCORE_TYPES = { try: 1, penalty_try: 1, penalty_kick: 1, drop_goal: 1 };
   var CARD_TYPES = { sin_bin: 1, red_card: 1 };
   var MOVEMENT = { carry: 1, pass: 1, kick: 1 };
   var HALF_LIFE = 4.5, SMOOTH_SIGMA = 1.2, RESOLUTION = 6;
 
-  // rugby.py _territory_weight, origin fixed 1.0
-  function territoryWeight(metres, endMFromLine, linebreaks) {
+  // rugby.py _territory_weight. origin defaults to 1.0 (unknown start_reason,
+  // or a pre-start_reason export).
+  function territoryWeight(metres, endMFromLine, linebreaks, startReason) {
     var territory = Math.max(0, 1 - endMFromLine / 100);
     var base = 0.15 + 0.35 * Math.min(metres / 40, 1);
-    return Math.round(((base + 0.3 * territory) * (1 + 0.25 * linebreaks)) * 100) / 100;
+    var origin = ORIGIN_FACTOR[startReason] || 1.0;
+    return Math.round(((base + 0.3 * territory) * (1 + 0.25 * linebreaks) * origin) * 100) / 100;
   }
 
   // Reflect-padded 1-D Gaussian blur — scipy.ndimage.gaussian_filter1d default.
@@ -76,7 +84,7 @@
       if (!phase) return;
       impulses.push({
         team: phase.team, t: phase.t,
-        weight: territoryWeight(phase.metres, phase.endM, phase.linebreaks),
+        weight: territoryWeight(phase.metres, phase.endM, phase.linebreaks, phase.origin),
         kind: "pressure"
       });
       phase = null;
@@ -84,8 +92,12 @@
     actions.forEach(function (a) {
       var team = a.team;
       if (MOVEMENT[a.type]) {
-        if (phase && phase.team !== team) closePhase();
-        if (!phase) phase = { team: team, t: num(a.minute), metres: 0, endM: 50, linebreaks: 0 };
+        // A team change is a sub-chain split (kick/interception); a start_reason
+        // is a new possession's first action. Break on either so phases match
+        // rugby.py's phase_sequences even when possession is retained (a tapped
+        // penalty kept by the same team).
+        if (phase && (phase.team !== team || a.start_reason != null)) closePhase();
+        if (!phase) phase = { team: team, t: num(a.minute), metres: 0, endM: 50, linebreaks: 0, origin: a.start_reason };
         phase.metres += num(a.metres_gained);
         if (Number.isFinite(a.end_metres_from_line)) phase.endM = a.end_metres_from_line;
         if (a.linebreak) phase.linebreaks += 1;

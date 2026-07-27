@@ -13,19 +13,36 @@ PX = config.PX_PER_M
 LEFT = config.IN_GOAL_DEPTH_M * PX
 
 
-def test_press_snaps_onto_the_origin_mark():
+def test_press_within_tolerance_snaps_onto_the_origin_mark():
     m = fixtures.open_play_match()
     m.last_origin = ChainOrigin("lineout", "home", (400.0, 100.0))
     m.pending_start_reason = "lineout"
-    assert m.mouse_down(300.0, 250.0, 100.0) == (400.0, 100.0)
+    # press 6.25m off the mark (< SNAP_TOLERANCE_M): aimed at it, so it snaps
+    assert m.mouse_down(360.0, 70.0, 100.0) == (400.0, 100.0)
+
+
+def test_press_beyond_tolerance_is_taken_as_pressed():
+    m = fixtures.open_play_match()
+    m.last_origin = ChainOrigin("lineout", "home", (400.0, 100.0))
+    m.pending_start_reason = "lineout"
+    # 22.5m off the mark (> SNAP_TOLERANCE_M): a deliberate free start, no snap,
+    # so one wild click can't drag the whole trace onto the mark
+    assert m.mouse_down(300.0, 250.0, 100.0) == (300.0, 250.0)
+
+
+def test_pending_mark_exposes_the_snap_target():
+    m = fixtures.open_play_match()
+    m.last_origin = ChainOrigin("lineout", "home", (400.0, 100.0))
+    m.pending_start_reason = "lineout"
+    assert m.pending_mark == (400.0, 100.0)     # what chips._target draws
 
 
 def test_whole_path_shifts_by_the_snap_vector():
     m = fixtures.open_play_match()
     m.last_origin = ChainOrigin("turnover_open", "away", (400.0, 100.0))
     m.pending_start_reason = "turnover_open"
-    m.mouse_down(300.0, 250.0, 100.0)          # snap vector = (+100, -150)
-    assert m.mouse_move(310.0, 250.0, 100.1) == (410.0, 100.0)
+    m.mouse_down(360.0, 70.0, 100.0)           # snap vector = (+40, +30)
+    assert m.mouse_move(370.0, 70.0, 100.1) == (410.0, 100.0)
 
 
 def test_initial_kickoff_falls_back_to_halfway():

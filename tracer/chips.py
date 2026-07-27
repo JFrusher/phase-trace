@@ -44,6 +44,7 @@ def build_chips(match, layer):
 
     @ui.refreshable
     def chip():
+        _target(match)          # "press here" dot on the mark the next press snaps to
         o = match.last_origin
         if o is None or o.mark is None:
             return
@@ -78,9 +79,27 @@ def build_chips(match, layer):
     return chip
 
 
+def _target(match):
+    """A small dot on the mark the next press will snap onto (MatchState.pending_mark).
+
+    Gives the operator something to aim at, so the press lands inside the snap
+    tolerance and the whole trace barely shifts. Sits on the exact mark while the
+    origin badge floats clear of it; it inherits the layer's pointer-events-none,
+    so the press it marks passes straight through to the canvas underneath.
+    """
+    mark = match.pending_mark
+    if mark is None:
+        return
+    x, y = mark
+    ui.element("div").classes(
+        "absolute rounded-full border-2 border-slate-600 bg-white/70"
+    ).style(f"left:{x / IMAGE_W * 100:.2f}%;top:{y / IMAGE_H * 100:.2f}%;"
+            "width:10px;height:10px;transform:translate(-50%,-50%)")
+
+
 def _badge(match, o):
     with ui.row().classes(
-            "items-center gap-1 rounded-full pl-2 pr-1 py-0.5 shadow-lg "
+            "items-center gap-1 rounded-md pl-2 pr-1 py-0.5 "
             "text-xs font-bold text-white whitespace-nowrap"
     ).style(f"background:{match.team_colors[o.team]}"):
         # An open turnover has nothing to correct but the team, and the colour
@@ -103,7 +122,7 @@ def _chooser(options, selected, on_pick, labels=OPTION_LABELS):
     Used for the things a traced line cannot show: what a team did with a
     penalty, why the penalty was given, and whether the ball was grounded.
     """
-    with ui.row().classes("gap-0 rounded bg-white/90 shadow"):
+    with ui.row().classes("gap-0 rounded-sm border border-slate-300 bg-white"):
         for opt in options:
             chosen = selected == opt
             ui.button(labels[opt], on_click=lambda o=opt: on_pick(o)) \

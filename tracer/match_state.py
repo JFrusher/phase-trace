@@ -122,7 +122,7 @@ class MatchState:
         """
         self._snap = (0.0, 0.0)
         mark = self._start_mark()
-        if mark is not None:
+        if mark is not None and self._should_snap(mark, x, y):
             mx, my = mark
             self._snap = (mx - x, my - y)
             x, y = mx, my
@@ -151,6 +151,30 @@ class MatchState:
         if self.pending_start_reason in config.CENTRE_SPOT_REASONS:
             return halfway_mark(self.cal)
         return None
+
+    @property
+    def pending_mark(self):
+        """The mark the next press snaps onto, drawn as a target (chips._target).
+
+        Same source as the snap in mouse_down; None when the next start is
+        free-hand (no origin mark, not a centre-spot reason).
+        """
+        return self._start_mark()
+
+    def _should_snap(self, mark, x, y) -> bool:
+        """Whether a press at (x, y) snaps onto mark.
+
+        A centre-spot restart (kickoff / restart) is a hard law — the ball is on
+        the spot however you press — so it always snaps. A positional mark
+        (lineout, scrum, turnover, penalty) is only inferred, so it snaps only
+        when the press lands within SNAP_TOLERANCE_M; a press further out is
+        taken at face value, a deliberate free start, so one wild click can't
+        drag the whole trace onto an inferred mark.
+        """
+        if self.pending_start_reason in config.CENTRE_SPOT_REASONS:
+            return True
+        return math.hypot(mark[0] - x, mark[1] - y) <= (
+            config.SNAP_TOLERANCE_M * config.PX_PER_M)
 
     def mouse_move(self, x, y, t):
         """Returns the recorded point, which the canvas draws (see mouse_down)."""

@@ -19,6 +19,14 @@ TOUCH_MARGIN_M = 2.0        # a trace finishing this close to a touchline counts
                             # the cursor leaves the image, so a ball kicked out
                             # is a path that STOPS at the edge, never one that
                             # visibly crosses it
+SNAP_TOLERANCE_M = 10.0     # a new possession's press snaps onto an INFERRED start
+                            # mark (lineout, scrum, turnover, penalty) only if it
+                            # lands within this radius; a press further out is taken
+                            # at face value — a deliberate free start — so one wild
+                            # click can't drag the whole trace onto a guessed mark.
+                            # Centre-spot restarts (CENTRE_SPOT_REASONS) are a hard
+                            # law and always snap, tolerance or not. The mark is
+                            # drawn as a target (chips._target) so operators aim in.
 
 # --- segmentation thresholds (the tunable heart of Live Trace) -----------
 # Spacing/windows are in METRES OF TRACED PATH, not milliseconds: the line is

@@ -69,17 +69,16 @@ def _save_now(ctx):
 def _build_header(m, on_undo):
     """Clock / score / possession row. Returns the widgets refresh() drives."""
     with ui.row().classes("items-center gap-4"):
-        w = {"clock": ui.label("00:00").classes("text-3xl font-mono"),
+        w = {"clock": ui.label("00:00").classes("text-2xl font-mono"),
              "clock_btn": ui.button(icon="play_arrow", on_click=m.clock.toggle)}
-        chip_cls = ("px-2 py-0.5 rounded text-white text-2xl "
+        chip_cls = ("px-2 py-0.5 rounded-sm text-white text-xl "
                     "font-mono font-bold")
         w["home_chip"] = ui.label().classes(chip_cls) \
             .style(f"background:{m.team_colors['home']}")
         w["away_chip"] = ui.label().classes(chip_cls) \
             .style(f"background:{m.team_colors['away']}")
         w["poss"] = ui.label().classes(
-            "px-4 py-1 rounded-full text-white text-3xl font-bold "
-            "shadow-lg")
+            "px-2 py-0.5 rounded-md text-white text-xl font-bold")
         w["status"] = ui.label().classes("text-sm text-gray-500")
         ui.button("Halftime flip", on_click=m.halftime_flip).props("outline")
         ui.button("Review", on_click=lambda: open_review(m)).props("outline")
@@ -198,10 +197,15 @@ def _build_match_ui(m, ctx, root, dev):
 
 @ui.page("/")
 def index(dev: bool = False):  # ?dev=1 enables the dev drawer
+    # utility chrome: neutral slate primary (Quasar's default is a marketing
+    # blue), flat bordered cards instead of floating elevation. Team/action
+    # colours are set per-element and untouched — they're data, not chrome.
+    ui.colors(primary="#334155")
+    ui.add_css(".q-card{box-shadow:none;border:1px solid #e2e8f0;border-radius:6px;}")
     # per-connection state, built inside the page closure: module-level state
     # would let two tabs / a reload corrupt each other's match
     ctx = {"match": None, "canvas": None}
-    root = ui.column().classes("items-center gap-3 w-full")
+    root = ui.column().classes("items-start gap-3 w-full px-4")
     ui.keyboard(on_key=partial(_handle_key, ctx), repeating=False)
     setup_form(root, partial(_build_match_ui, ctx=ctx, root=root, dev=dev),
                autosave.latest_session())

@@ -41,27 +41,32 @@ def action_stream(events: list[dict], actions: list[dict]) -> list[dict]:
 
 
 # --- summaries --------------------------------------------------------------
+def _fold_player(stats: dict, e: dict):
+    """Attribute one stream entry to its (team, jersey) totals."""
+    team, num, typ = e.get("team"), e.get("player"), e.get("type")
+    if typ == "carry" and num is not None:
+        s = stats[(team, num)]
+        s["carries"] += 1
+        s["carry_metres"] += e.get("metres_gained", 0.0)
+        s["linebreaks"] += 1 if e.get("linebreak") else 0
+    elif typ == "kick" and num is not None:
+        s = stats[(team, num)]
+        s["kicks"] += 1
+        s["kick_metres"] += e.get("metres_gained", 0.0)
+    elif typ == "try":
+        if num is not None:
+            stats[(team, num)]["tries"] += 1
+        if e.get("assist") is not None:
+            stats[(team, e["assist"])]["assists"] += 1
+
+
 def player_rows(stream: list[dict]) -> list[dict]:
     """Per (team, jersey) attacking + scoring totals, sorted for a stable file."""
     blank = lambda: {"carries": 0, "carry_metres": 0.0, "linebreaks": 0,
                      "kicks": 0, "kick_metres": 0.0, "tries": 0, "assists": 0}
     stats: dict = defaultdict(blank)
     for e in stream:
-        team, num, typ = e.get("team"), e.get("player"), e.get("type")
-        if num is not None and typ == "carry":
-            s = stats[(team, num)]
-            s["carries"] += 1
-            s["carry_metres"] += e.get("metres_gained", 0.0)
-            s["linebreaks"] += 1 if e.get("linebreak") else 0
-        elif num is not None and typ == "kick":
-            s = stats[(team, num)]
-            s["kicks"] += 1
-            s["kick_metres"] += e.get("metres_gained", 0.0)
-        elif typ == "try":
-            if num is not None:
-                stats[(team, num)]["tries"] += 1
-            if e.get("assist") is not None:
-                stats[(team, e["assist"])]["assists"] += 1
+        _fold_player(stats, e)
     rows = []
     for (team, num), s in sorted(stats.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):
         s["carry_metres"] = round(s["carry_metres"], 1)

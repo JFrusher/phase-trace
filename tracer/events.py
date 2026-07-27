@@ -112,8 +112,7 @@ def infer_origin(*, segments, chain_start_team, final_team, scored_team,
 
     last = segments[-1]
     end = last.points[-1]
-    if cal.crossed_touch(end.y) or (last.action == "KICK"
-                                    and cal.ends_in_touch(end.y)):
+    if _ball_out_of_touch(last, end, cal):
         return _lineout(last, end, team, chain_start_team, armed,
                         attack_dir_home, cal)
     if cal.crossed_dead_ball(end.x) or in_goal_outcome == "drop_out":
@@ -130,6 +129,12 @@ def infer_origin(*, segments, chain_start_team, final_team, scored_team,
     if any(s.intercepted for s in segments):
         return ChainOrigin("interception", team)
     return ChainOrigin("turnover_open", team, (end.x, end.y))
+
+
+def _ball_out_of_touch(last, end, cal) -> bool:
+    """The ball crossed a touchline — carried over, or kicked out and landing there."""
+    return cal.crossed_touch(end.y) or (last.action == "KICK"
+                                        and cal.ends_in_touch(end.y))
 
 
 def _lineout(last, end, team, chain_start_team, armed, attack_dir_home,
@@ -217,52 +222,75 @@ def chain_to_events(chain, team_names: dict, attack_dir_home: int,
     def minute_at(t):
         return round(chain.start_minute + (t - t0) / 60, 1)
 
-    # split into runs of consecutive same-team segments
-    subs, current = [], [chain.segments[0]]
-    for seg in chain.segments[1:]:
+    subs = _split_by_team(chain.segments)
+    out = []
+    for i, sub in enumerate(subs):
+        ev = _phase_event(sub, team_names, attack_dir_home, cal, minute_at)
+        if i == 0:
+            # origin keys precede players so the exported key order is stable
+            _add_origin(ev, sub, attack_dir_home, cal, start_reason)
+        players = [{"number": p.number, "role": p.role}
+                   for s in sub for p in s.players]
+        if players:
+            ev["players"] = players  # harmless extra, ignored by the translator
+        out.append(ev)
+        if i > 0 and subs[i - 1][-1].action == "PASS":  # interception split
+            out.append(_turnover_event(sub, team_names, cal, flip, minute_at))
+    return out
+
+
+def _split_by_team(segments) -> list[list]:
+    """Group into runs of consecutive same-team segments."""
+    subs, current = [], [segments[0]]
+    for seg in segments[1:]:
         if seg.team == current[-1].team:
             current.append(seg)
         else:
             subs.append(current)
             current = [seg]
     subs.append(current)
+    return subs
 
-    out = []
-    for i, sub in enumerate(subs):
-        team = sub[0].team
-        attack_dir = attack_dir_home if team == "home" else -attack_dir_home
-        start_pt, end_pt = sub[0].points[0], sub[-1].points[-1]
-        ev = {
-            "type": "phase_sequence",
-            "team": team_names[team],
-            "minute": minute_at(sub[0].start_t),
-            "metres_gained": cal.metres_gained(start_pt.x, end_pt.x, attack_dir),
-            "end_metres_from_line": cal.end_metres_from_line(end_pt.x, attack_dir),
-            "linebreaks": sum(1 for s in sub if s.linebreak),
-        }
-        if i == 0:
-            # only the first sub-chain has an origin worth naming: later ones
-            # exist because a kick or interception split this chain, which is
-            # already recorded in the segment that did it
-            ev["start_metres_from_line"] = cal.metres_from_line(
-                start_pt.x, attack_dir)
-            if start_reason:
-                ev["start_reason"] = start_reason
-        players = [{"number": p.number, "role": p.role}
-                   for s in sub for p in s.players]
-        if players:
-            ev["players"] = players  # harmless extra, ignored by the translator
-        out.append(ev)
-        if i > 0 and subs[i - 1][-1].action == "PASS":  # team changed on an interception
-            # where the ball was picked off — the gaining run's first point
-            ix, iy = canonical_xy(cal.field_x_m(start_pt.x), cal.field_y_m(start_pt.y), flip)
-            out.append({
-                "type": "turnover_won",
-                "team": team_names[team],
-                "minute": minute_at(sub[0].start_t),
-                "x_m": round(ix, 1), "y_m": round(iy, 1),
-            })
-    return out
+
+def _phase_event(sub, team_names, attack_dir_home, cal, minute_at) -> dict:
+    team = sub[0].team
+    attack_dir = attack_dir_home if team == "home" else -attack_dir_home
+    start_pt, end_pt = sub[0].points[0], sub[-1].points[-1]
+    return {
+        "type": "phase_sequence",
+        "team": team_names[team],
+        "minute": minute_at(sub[0].start_t),
+        "metres_gained": cal.metres_gained(start_pt.x, end_pt.x, attack_dir),
+        "end_metres_from_line": cal.end_metres_from_line(end_pt.x, attack_dir),
+        "linebreaks": sum(1 for s in sub if s.linebreak),
+    }
+
+
+def _add_origin(ev, sub, attack_dir_home, cal, start_reason):
+    """Name where the first sub-chain began (mutates ev in place).
+
+    Only the first sub-chain has an origin worth naming: later ones exist
+    because a kick or interception split this chain, which is already recorded
+    in the segment that did it.
+    """
+    team = sub[0].team
+    attack_dir = attack_dir_home if team == "home" else -attack_dir_home
+    ev["start_metres_from_line"] = cal.metres_from_line(sub[0].points[0].x, attack_dir)
+    if start_reason:
+        ev["start_reason"] = start_reason
+
+
+def _turnover_event(sub, team_names, cal, flip, minute_at) -> dict:
+    """Where the ball was picked off — the gaining run's first point."""
+    team = sub[0].team
+    start_pt = sub[0].points[0]
+    ix, iy = canonical_xy(cal.field_x_m(start_pt.x), cal.field_y_m(start_pt.y), flip)
+    return {
+        "type": "turnover_won",
+        "team": team_names[team],
+        "minute": minute_at(sub[0].start_t),
+        "x_m": round(ix, 1), "y_m": round(iy, 1),
+    }
 
 
 def actor(segment) -> int | None:

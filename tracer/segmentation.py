@@ -109,14 +109,8 @@ def _angle_deg(a, b) -> float:
     return math.degrees(math.acos(max(-1.0, min(1.0, dot))))
 
 
-def _boundary_candidates(points, arc):
-    """(candidates, info): per-point evidence scores vs path-adaptive baselines.
-
-    candidates: (index, score, angle, ratio) tuples where the combined
-    heading/speed-change evidence clears BOUNDARY_ACCEPT. Baselines are this
-    path's own medians (floored), so a wobbly hand raises the bar and either
-    evidence alone can still clear the accept threshold.
-    """
+def _measure_turns(points, arc):
+    """(index, heading change deg, speed ratio) for every usable interior point."""
     measured = []
     for i in range(1, len(points) - 1):
         before = _mean_velocity(points, arc, i, -1)
@@ -126,23 +120,45 @@ def _boundary_candidates(points, arc):
         speed_b, speed_a = math.hypot(*before), math.hypot(*after)
         if speed_b < 1e-6 and speed_a < 1e-6:
             continue  # stationary hover, heading is noise
-        angle = _angle_deg(before, after)
         ratio = max(speed_b, speed_a) / max(min(speed_b, speed_a), 1e-6)
-        measured.append((i, angle, ratio))
-    if not measured:
-        return [], {}
+        measured.append((i, _angle_deg(before, after), ratio))
+    return measured
+
+
+def _evidence_baselines(measured):
+    """(med_angle, med_ratio, angle_base, ratio_base) from this path's own medians."""
     med_angle = sorted(a for _, a, _ in measured)[len(measured) // 2]
     med_ratio = sorted(r for _, _, r in measured)[len(measured) // 2]
     angle_base = (max(config.BOUNDARY_ANGLE_FLOOR_DEG, med_angle)
                   * config.BOUNDARY_ANGLE_BASE_MULT)
     ratio_base = (max(config.BOUNDARY_RATIO_FLOOR, med_ratio)
                   * config.BOUNDARY_RATIO_BASE_MULT)
+    return med_angle, med_ratio, angle_base, ratio_base
+
+
+def _evidence_score(angle, ratio, angle_base, ratio_base):
+    """Combined heading/speed-change evidence — either alone can clear accept."""
+    return (config.W_BOUNDARY_ANGLE * math.tanh(
+                max(0.0, angle - angle_base) / config.BOUNDARY_ANGLE_SCALE_DEG)
+            + config.W_BOUNDARY_SPEED * math.tanh(
+                max(0.0, ratio - ratio_base) / config.BOUNDARY_RATIO_SCALE))
+
+
+def _boundary_candidates(points, arc):
+    """(candidates, info): per-point evidence scores vs path-adaptive baselines.
+
+    candidates: (index, score, angle, ratio) tuples where the combined
+    heading/speed-change evidence clears BOUNDARY_ACCEPT. Baselines are this
+    path's own medians (floored), so a wobbly hand raises the bar and either
+    evidence alone can still clear the accept threshold.
+    """
+    measured = _measure_turns(points, arc)
+    if not measured:
+        return [], {}
+    med_angle, med_ratio, angle_base, ratio_base = _evidence_baselines(measured)
     accepted, near = [], []
     for i, angle, ratio in measured:
-        score = (config.W_BOUNDARY_ANGLE * math.tanh(
-                     max(0.0, angle - angle_base) / config.BOUNDARY_ANGLE_SCALE_DEG)
-                 + config.W_BOUNDARY_SPEED * math.tanh(
-                     max(0.0, ratio - ratio_base) / config.BOUNDARY_RATIO_SCALE))
+        score = _evidence_score(angle, ratio, angle_base, ratio_base)
         if score >= config.BOUNDARY_ACCEPT:
             accepted.append((i, score, angle, ratio))
         elif score > 0:
@@ -156,17 +172,8 @@ def _boundary_candidates(points, arc):
     return accepted, info
 
 
-def _pick_boundaries(arc, candidates, notes):
-    """Collapse candidate runs to one boundary each, enforce min segment length.
-
-    All spacing is in metres of traced path (arc), not time — the same shape
-    segments identically however fast it was drawn. Appends one human-readable
-    string per drop/demote decision into notes.
-    """
-    if not candidates:
-        return []
-    a_end = arc[-1]
-    # group candidates within BOUNDARY_GROUP_M of arc: one turn each
+def _group_candidates(arc, candidates, notes):
+    """Collapse candidates within BOUNDARY_GROUP_M of arc into one turn each."""
     groups, current = [], [candidates[0]]
     for cand in candidates[1:]:
         if arc[cand[0]] - arc[current[-1][0]] <= config.BOUNDARY_GROUP_M:
@@ -180,29 +187,54 @@ def _pick_boundaries(arc, candidates, notes):
         if len(g) > 1:
             notes.append(f"group of {len(g)} cands @{arc[p[0]]:.1f}m"
                          f" -> picked i={p[0]}")
+    return picked
 
-    # drop boundaries hugging the path's ends, then thin to MIN_SEGMENT_M spacing
+
+def _drop_near_ends(arc, picked, notes):
+    """Drop boundaries hugging the path's ends — too short to be a segment."""
     min_gap = config.MIN_SEGMENT_M
+    a_end = arc[-1]
     survivors = []
     for c in picked:
-        if arc[c[0]] < min_gap or a_end - arc[c[0]] < min_gap:
+        hugs_end = arc[c[0]] < min_gap or a_end - arc[c[0]] < min_gap
+        if hugs_end:
             notes.append(f"cand @{arc[c[0]]:.1f}m dropped:"
                          f" within {config.MIN_SEGMENT_M}m of path end")
         else:
             survivors.append(c)
+    return survivors
+
+
+def _thin_to_min_gap(arc, survivors, notes):
+    """Thin to MIN_SEGMENT_M spacing, keeping the stronger of any close pair."""
+    min_gap = config.MIN_SEGMENT_M
     kept = []
     for cand in survivors:
-        if kept and arc[cand[0]] - arc[kept[-1][0]] < min_gap:
-            if cand[1] > kept[-1][1]:
-                notes.append(f"cand @{arc[kept[-1][0]]:.1f}m dropped:"
-                             f" <{config.MIN_SEGMENT_M}m before stronger cand")
-                kept[-1] = cand
-            else:
-                notes.append(f"cand @{arc[cand[0]]:.1f}m dropped:"
-                             f" <{config.MIN_SEGMENT_M}m after previous, weaker")
-        else:
+        crowds_previous = kept and arc[cand[0]] - arc[kept[-1][0]] < min_gap
+        if not crowds_previous:
             kept.append(cand)
-    return [c[0] for c in kept]
+        elif cand[1] > kept[-1][1]:
+            notes.append(f"cand @{arc[kept[-1][0]]:.1f}m dropped:"
+                         f" <{config.MIN_SEGMENT_M}m before stronger cand")
+            kept[-1] = cand
+        else:
+            notes.append(f"cand @{arc[cand[0]]:.1f}m dropped:"
+                         f" <{config.MIN_SEGMENT_M}m after previous, weaker")
+    return kept
+
+
+def _pick_boundaries(arc, candidates, notes):
+    """Collapse candidate runs to one boundary each, enforce min segment length.
+
+    All spacing is in metres of traced path (arc), not time — the same shape
+    segments identically however fast it was drawn. Appends one human-readable
+    string per drop/demote decision into notes.
+    """
+    if not candidates:
+        return []
+    picked = _group_candidates(arc, candidates, notes)
+    survivors = _drop_near_ends(arc, picked, notes)
+    return [c[0] for c in _thin_to_min_gap(arc, survivors, notes)]
 
 
 def _classify(points: list[PathPoint], attack_dir: int) -> tuple:
@@ -256,6 +288,72 @@ def _digit_bursts(taps):
     return out
 
 
+def _apply_type_hint(segments, tap, t0, grace, log):
+    """K/P/R tap: relabel the segment under the cursor (Decision 10 — never split)."""
+    seg = _segment_at(segments, tap.t, grace)
+    if seg is None:
+        log.append(f"{tap.t - t0:.2f}s '{tap.key}' hint -> "
+                   "no segment within grace")
+        return
+    log.append(f"{tap.t - t0:.2f}s '{tap.key}' hint -> "
+               f"seg{segments.index(seg)} {seg.action}->"
+               f"{config.TYPE_HINT_KEYS[tap.key]}")
+    seg.action = config.TYPE_HINT_KEYS[tap.key]
+
+
+def _apply_linebreak(segments, tap, t0, grace, log):
+    """L tap: flag a CARRY as a linebreak; only a carry can break the line."""
+    seg = _segment_at(segments, tap.t, grace)
+    if seg is None:
+        log.append(f"{tap.t - t0:.2f}s 'l' -> no segment within grace")
+    elif seg.action != "CARRY":
+        log.append(f"{tap.t - t0:.2f}s 'l' -> ignored: "
+                   f"seg{segments.index(seg)} is {seg.action}")
+    else:
+        seg.linebreak = True
+        log.append(f"{tap.t - t0:.2f}s 'l' -> seg{segments.index(seg)} linebreak")
+
+
+def _tag_target(segments, b, t):
+    """(segment, role) for a digit burst at t whose nearest boundary is b."""
+    if t >= b:  # just after a boundary: actor starting the next action
+        following = [s for s in segments if s.start_t == b]
+        return (following[0], "start") if following else (segments[-1], "end")
+    # just before: whoever ended the previous action
+    ending = [s for s in segments if s.end_t == b]
+    return (ending[-1], "end") if ending else (segments[0], "start")
+
+
+def _apply_player_numbers(segments, taps, t0, log):
+    """Player numbers: nearest boundary decides segment and role (Decision 11)."""
+    boundaries = [segments[0].start_t] + [s.end_t for s in segments]
+    for number, t in _digit_bursts(taps):
+        b = min(boundaries, key=lambda bt: abs(bt - t))
+        seg, role = _tag_target(segments, b, t)
+        seg.players.append(PlayerTag(number=number, role=role, at_ts=t))
+        log.append(f"{t - t0:.2f}s digit-burst {number} -> boundary @{b - t0:.2f}s "
+                   f"({'after' if t >= b else 'before'}) -> "
+                   f"seg{segments.index(seg)} {role}")
+
+
+def _overlapping_shift(seg, shift_intervals):
+    """First Shift interval held across seg's window, if any."""
+    return next(((s, e) for s, e in shift_intervals
+                 if s < seg.end_t and e > seg.start_t), None)
+
+
+def _mark_intercepts(segments, shift_intervals, t0, log):
+    """Shift held over a PASS means the other side took it out of the air."""
+    for seg in segments:
+        if seg.action != "PASS":
+            continue
+        held = _overlapping_shift(seg, shift_intervals)
+        if held:
+            seg.intercepted = True
+            log.append(f"shift {held[0] - t0:.2f}-{held[1] - t0:.2f}s overlaps "
+                       f"seg{segments.index(seg)} PASS -> intercepted")
+
+
 def apply_taps(segments: list[Segment], taps, shift_intervals) -> list[Segment]:
     """Layer keyboard annotations onto geometrically-detected segments.
 
@@ -271,50 +369,12 @@ def apply_taps(segments: list[Segment], taps, shift_intervals) -> list[Segment]:
 
     for tap in taps:
         if tap.key in config.TYPE_HINT_KEYS:
-            seg = _segment_at(segments, tap.t, grace)
-            if seg:
-                log.append(f"{tap.t - t0:.2f}s '{tap.key}' hint -> "
-                           f"seg{segments.index(seg)} {seg.action}->"
-                           f"{config.TYPE_HINT_KEYS[tap.key]}")
-                seg.action = config.TYPE_HINT_KEYS[tap.key]
-            else:
-                log.append(f"{tap.t - t0:.2f}s '{tap.key}' hint -> "
-                           "no segment within grace")
+            _apply_type_hint(segments, tap, t0, grace, log)
         elif tap.key == config.LINEBREAK_KEY:
-            seg = _segment_at(segments, tap.t, grace)
-            if seg and seg.action == "CARRY":
-                seg.linebreak = True
-                log.append(f"{tap.t - t0:.2f}s 'l' -> seg{segments.index(seg)} linebreak")
-            elif seg:
-                log.append(f"{tap.t - t0:.2f}s 'l' -> ignored: "
-                           f"seg{segments.index(seg)} is {seg.action}")
-            else:
-                log.append(f"{tap.t - t0:.2f}s 'l' -> no segment within grace")
+            _apply_linebreak(segments, tap, t0, grace, log)
 
-    # player numbers: nearest boundary decides segment and role (Decision 11)
-    boundaries = [segments[0].start_t] + [s.end_t for s in segments]
-    for number, t in _digit_bursts(taps):
-        b = min(boundaries, key=lambda bt: abs(bt - t))
-        if t >= b:  # just after a boundary: actor starting the next action
-            following = [s for s in segments if s.start_t == b]
-            seg, role = (following[0], "start") if following else (segments[-1], "end")
-        else:       # just before: whoever ended the previous action
-            ending = [s for s in segments if s.end_t == b]
-            seg, role = (ending[-1], "end") if ending else (segments[0], "start")
-        seg.players.append(PlayerTag(number=number, role=role, at_ts=t))
-        log.append(f"{t - t0:.2f}s digit-burst {number} -> boundary @{b - t0:.2f}s "
-                   f"({'after' if t >= b else 'before'}) -> "
-                   f"seg{segments.index(seg)} {role}")
-
-    for seg in segments:
-        if seg.action != "PASS":
-            continue
-        for s, e in shift_intervals:
-            if s < seg.end_t and e > seg.start_t:
-                seg.intercepted = True
-                log.append(f"shift {s - t0:.2f}-{e - t0:.2f}s overlaps "
-                           f"seg{segments.index(seg)} PASS -> intercepted")
-                break
+    _apply_player_numbers(segments, taps, t0, log)
+    _mark_intercepts(segments, shift_intervals, t0, log)
     return segments
 
 
@@ -346,7 +406,15 @@ def segment_path(points: list[PathPoint], attack_dir: int,
     candidates, boundary_info = _boundary_candidates(smoothed, arc)
     notes: list[str] = []
     boundaries = _pick_boundaries(arc, candidates, notes)
-    t0 = points[0].t
+    _record_boundary_debug(d, smoothed, points[0].t, candidates, boundaries,
+                           boundary_info, notes)
+    return _classify_slices(_slice_at(smoothed, boundaries), attack_dir,
+                            force_first, d)
+
+
+def _record_boundary_debug(d, smoothed, t0, candidates, boundaries,
+                           boundary_info, notes):
+    """Fill the dev-panel view of what the boundary pass saw and chose."""
     d["boundary"] = boundary_info
     d["candidates"] = [{"i": i, "t": smoothed[i].t - t0, "x": round(smoothed[i].x, 1),
                         "y": round(smoothed[i].y, 1), "angle": round(angle, 1),
@@ -357,13 +425,20 @@ def segment_path(points: list[PathPoint], attack_dir: int,
                     "y": round(smoothed[b].y, 1)} for b in boundaries]
     d["boundary_notes"] = notes
     d["segments"] = []
-    slices = []
-    prev = 0
+
+
+def _slice_at(smoothed, boundaries):
+    """Cut the path at each boundary index; the boundary point joins both sides."""
+    slices, prev = [], 0
     for b in boundaries:
         slices.append(smoothed[prev:b + 1])
         prev = b
     slices.append(smoothed[prev:])
+    return slices
 
+
+def _classify_slices(slices, attack_dir, force_first, d):
+    """Classify each slice, flipping attack direction after every KICK."""
     segments, direction = [], attack_dir
     for i, sl in enumerate(slices):
         action, evidence = _classify(sl, direction)

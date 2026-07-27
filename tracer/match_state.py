@@ -254,29 +254,7 @@ class MatchState:
                            self.last_end_reason, self._pending_try,
                            self.pending_start_reason, self.armed_next_action)
         final_team = assign_teams(segments, chain.team)
-        at_goal = self.armed_next_action == "kick_at_goal"
-        scored_team = self._scored_team_this_chain()
-        # a trace that finished over a try line: the geometry guesses, the
-        # chip's chooser overrides. A try is expressed as a scored_team, so
-        # everything downstream (score, restart, conversion listener) is the
-        # path the T tap already takes. A tapped score outranks all of it, and
-        # hides the chooser rather than offering a control that can't win.
-        self.in_goal_choice = None
-        if at_goal:
-            # a kick at goal is judged by the posts, not by grounding: no
-            # try/held-up chooser, and a line through the uprights is the score
-            kick = segments[0]
-            kick_dir = (self.attack_dir_home if kick.team == "home"
-                        else -self.attack_dir_home)
-            if not scored_team and penalty_at_goal_scored(kick, kick_dir, self.cal):
-                self._log_penalty_kick(kick.team, kick.end_t)
-                scored_team = kick.team
-        elif not scored_team:
-            self.in_goal_choice = self._in_goal_override or default_in_goal_outcome(
-                segments, self.attack_dir_home, self.cal)
-        try_team = None
-        if self.in_goal_choice == "try":
-            scored_team = try_team = self._in_goal_attacker(segments)
+        scored_team, try_team = self._resolve_score(segments)
         # the reason this chain BEGAN was decided when the last one ended;
         # capture it before inference overwrites it with the next one
         began_as = self.pending_start_reason
@@ -292,6 +270,40 @@ class MatchState:
         self.last_end_reason = ("score" if scored_team
                                 else "kick" if segments[-1].action == "KICK"
                                 else "turnover")
+        self._emit_chain(chain, segments, began_as, try_team)
+        if self.on_commit:
+            self.on_commit(chain)
+
+    def _resolve_score(self, segments) -> tuple:
+        """(scored_team, try_team), also setting self.in_goal_choice.
+
+        A trace that finished over a try line: the geometry guesses, the chip's
+        chooser overrides. A try is expressed as a scored_team, so everything
+        downstream (score, restart, conversion listener) is the path the T tap
+        already takes. A tapped score outranks all of it, and hides the chooser
+        rather than offering a control that can't win.
+        """
+        scored_team = self._scored_team_this_chain()
+        self.in_goal_choice = None
+        if self.armed_next_action == "kick_at_goal":
+            # a kick at goal is judged by the posts, not by grounding: no
+            # try/held-up chooser, and a line through the uprights is the score
+            kick = segments[0]
+            kick_dir = (self.attack_dir_home if kick.team == "home"
+                        else -self.attack_dir_home)
+            if not scored_team and penalty_at_goal_scored(kick, kick_dir, self.cal):
+                self._log_penalty_kick(kick.team, kick.end_t)
+                scored_team = kick.team
+        elif not scored_team:
+            self.in_goal_choice = self._in_goal_override or default_in_goal_outcome(
+                segments, self.attack_dir_home, self.cal)
+        if self.in_goal_choice == "try":
+            scored_team = try_team = self._in_goal_attacker(segments)
+            return scored_team, try_team
+        return scored_team, None
+
+    def _emit_chain(self, chain, segments, began_as, try_team):
+        """Turn the committed chain into events, actions, set-piece + try records."""
         flip = self._flipped()
         new_events = chain_to_events(
             chain, self.team_names, self.attack_dir_home, self.cal,
@@ -313,8 +325,6 @@ class MatchState:
             self._log_try(try_team, last.end_t, player=actor(last), assist=assist)
         self.last_summary = summarise(new_events, [s.action for s in segments])
         self._changed()
-        if self.on_commit:
-            self.on_commit(chain)
 
     def reclassify_segment(self, i: int):
         """Click a drawn segment to cycle its action, then re-commit the chain.

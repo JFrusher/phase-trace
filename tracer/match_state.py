@@ -101,6 +101,7 @@ class MatchState:
         self._chain_start_team = possession
         self.on_commit = None     # callback(chain) after a chain is committed
         self.on_change = None     # callback() after any state change
+        self.on_correction = None  # callback(payload) when an operator corrects a tag
         # dev-panel evidence: last end_chain attempt, accepted or rejected
         self.chain_seq = 0
         self.last_debug: dict = {}
@@ -225,6 +226,7 @@ class MatchState:
         if not segments:
             self.last_chain = None
             return None
+        pre = [s.action for s in segments]   # geometric labels before hint relabels
         apply_taps(segments, taps, intervals)
         chain = PlayChain(
             chain_id=new_chain_id(),
@@ -234,6 +236,7 @@ class MatchState:
             segments=segments,
         )
         self.last_chain = chain
+        self._log_hints(chain, segments, pre)
         self._commit_chain(chain)
         return chain
 
@@ -339,7 +342,9 @@ class MatchState:
             return
         order = ("CARRY", "PASS", "KICK")
         seg = chain.segments[i]
+        before = seg.action
         seg.action = order[(order.index(seg.action) + 1) % len(order)]
+        self._log_correction("reclassify", chain, i, seg, before)
         # a manual KICK asserts a handover; toggling one on/off re-frames every
         # segment after it, so re-derive their classification in the new frame
         seg.flips_possession = seg.action == "KICK"
@@ -347,6 +352,47 @@ class MatchState:
                     else -self.attack_dir_home)
         reclassify_downstream(chain.segments, base_dir, i)
         self._rewind_and_recommit(chain)
+
+    # --- correction logging (adaptive feedback loop) -----------------------
+    def _seg_evidence(self, i: int) -> dict:
+        """The classification evidence dict for segment i, captured at
+        segmentation time (features/scores/probs/confidence/attack_dir)."""
+        evs = self.last_debug.get("segments") or []
+        return evs[i] if i < len(evs) else {}
+
+    def _log_correction(self, kind: str, chain, i: int, seg, before: str):
+        """Fire on_correction for one segment tag override (reclassify or hint).
+
+        No-op unless a sink is wired: tests and fixtures never set on_correction,
+        so they write nothing to the feedback DB. Reclassifies feed weight
+        calibration; hints are audit-only (see feedback.training_pairs).
+        """
+        if not self.on_correction:
+            return
+        ev = self._seg_evidence(i)
+        self.on_correction({
+            "kind": kind,
+            "home": self.team_names["home"], "away": self.team_names["away"],
+            "segment_id": f"{chain.chain_id}#{i}",
+            "original": before, "corrected": seg.action,
+            "attack_dir": ev.get("attack_dir"),
+            "points": [[p.x, p.y, p.t] for p in seg.points],
+            "features": ev.get("features"),
+            "context": {"scores": ev.get("scores"), "probs": ev.get("probs"),
+                        "confidence": ev.get("confidence"),
+                        "geometric": ev.get("action_geo"),
+                        "minute": chain.start_minute, "team": chain.team},
+        })
+
+    def _log_hints(self, chain, segments, pre):
+        """Log any K/P/R hint that overrode a segment's geometric class.
+
+        A hint that changed the action means the operator disagreed with the
+        geometry; recorded (audit only) via the same payload as a reclassify.
+        """
+        for i, (was, seg) in enumerate(zip(pre, segments)):
+            if was != seg.action:
+                self._log_correction("hint", chain, i, seg, was)
 
     def choose_in_goal_outcome(self, outcome: str):
         """The in-goal chip: try / held up / drop-out for the last chain.

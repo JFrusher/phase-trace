@@ -99,7 +99,8 @@ the correction UI:
   and re-commits it, so a try taken back also takes its five points back.
 
 **Click any drawn segment** to cycle its action (carry → pass → kick); the
-chain re-commits with the consequences that follow.
+chain re-commits with the consequences that follow. Every such correction is
+logged for pre-game calibration (see [Tuning](#tuning)).
 
 ## Autosave
 
@@ -146,8 +147,10 @@ The loop: save the misbehaving trace in dev mode → promote it with the
 expected truth → `python -m tracer.sweep` grid-sweeps any constants over the
 whole corpus (39 synthetic scenarios + promoted real traces), and
 `python -m tracer.fit` proposes classification weights by softmax regression
-over the same corpus. Neither ever writes `config.py` — read the output,
-decide, edit by hand.
+over the same corpus. Corrections you make live in the app (re-cycling a
+segment) are also logged and folded into the same proposal by
+`python -m tracer.calibrate` — run it pre-game. None of the three ever writes
+`config.py` — read the output, decide, edit by hand.
 
 ## Manual test recipe (browser half; the pure logic is pytest-covered)
 
@@ -174,8 +177,12 @@ move are the boundary accept level, the ~27m geometric kick threshold, and the
 `origin_factor` weights in `translators/rugby_weights.json`, which are
 judgement calls with no reference data behind them.
 
-The loop for fixing that is already here: dev mode → Save last trace → promote
-with an `"expect"` key → `python -m tracer.sweep`.
+The loop for fixing that is already here, two ways in: dev mode → Save last
+trace → promote with an `"expect"` key → `python -m tracer.sweep`; or correct
+misreads live (click a segment to re-cycle it) and run
+`python -m tracer.calibrate` before the next game, which folds those logged
+corrections into the `fit` weight proposal. See **[TUNING.md](TUNING.md)** for
+the self-correction loop in full.
 
 ## Known MVP gaps (deliberate)
 

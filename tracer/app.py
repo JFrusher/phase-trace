@@ -19,6 +19,7 @@ from .chips import build_chips
 from .devpanel import build_dev_panel
 from .events import compute_score
 from .export import export_json
+from . import feedback
 from .pitch import pitch_svg
 from .raw_export import export_raw
 from .review import open_review
@@ -183,6 +184,7 @@ def _build_match_ui(m, ctx, root, dev):
 
     m.on_commit = committed
     m.on_change = lambda: (save_now(), refresh(), chips.refresh())
+    m.on_correction = feedback.log_correction   # log tag corrections for calibrate.py
     # timers must attach to a live slot: begin() runs inside the setup
     # form's click handler, whose slot root.clear() just deleted
     with root:

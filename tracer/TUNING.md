@@ -115,7 +115,7 @@ zero timing.
 3. **Promote to ground truth** — move to `tracer/tests/traces/`, add
    `"expect"` (vocabulary: `fixtures.check`). `test_corpus.py` picks it up;
    it also joins the **fit training set** automatically.
-4. **Propose** — two tools, same philosophy (print, never write):
+4. **Propose** — three tools, same philosophy (print, never write):
    - `python -m tracer.sweep` — grid over any config constants (edit `GRID`;
      weights sweep the same as thresholds). Ranked pass-count table.
    - `python -m tracer.fit` — softmax regression over every exact-actions
@@ -123,10 +123,41 @@ zero timing.
      values; prints a paste-ready weight block + before/after corpus pass
      counts + confusion. Weights barely move until real traces disagree with
      the synthetic corpus — that is correct behavior.
+   - `python -m tracer.calibrate` — `fit` plus the corrections operators logged
+     in the running app (see below). Same regression, same paste-ready block.
+     Run it **pre-game** to fold yesterday's fixes into today's weights; an
+     empty correction log makes it identical to `fit`.
 5. **Decide and edit by hand** — paste/adjust in `config.py`.
 6. **Verify** — `python -m pytest tracer/tests/`, especially
    `test_pace_invariance.py` (the same shape must classify identically across
    pace) and `test_corpus.py`. Then re-trace live in dev mode.
+
+## The self-correction feedback loop
+
+Steps 1–3 are the *manual* way to grow ground truth (capture → save → promote a
+trace file). There is also an **automatic** path: every correction an operator
+makes in the running app is logged to a local SQLite DB
+(`tracer/feedback/corrections.db`, gitignored) by
+[`feedback.py`](feedback.py). Logging is wired through `MatchState.on_correction`
+(set in `app.py`); anything that doesn't set that callback — every test, every
+fixture — writes nothing.
+
+- **Clicking a drawn segment to re-cycle its action** (carry→pass→kick) is a
+  labelled `(geometry, corrected-class)` pair — the highest-value signal, and
+  the only kind `calibrate` **trains on**.
+- K/P/R hints and Review-dialog edits (team, event type, delete) are logged too,
+  for the audit record, but are **excluded from training**: a K/P/R hint can
+  relabel a carry-shaped gesture and poison the geometric labels (the same
+  reason `fit` excludes hint scenarios).
+
+`python -m tracer.calibrate` reads that log — latest correction per segment
+wins, features re-extracted from the stored points under the *current* config so
+a pair survives later scale-tuning — adds the reclassifies to the fit corpus,
+and proposes weights exactly as `fit` does (still print-only). The L2 anchor
+keeps one or two corrections from over-swinging a weight; a systematic misread
+corrected many times is what actually moves it. Full loop: operators fix
+misreads live → corrections accrue → `calibrate` before the next game → paste
+the block if the numbers convince you.
 
 ## Old -> new constants
 

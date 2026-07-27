@@ -27,11 +27,17 @@ def _other(team):
 
 
 def assign_teams(segments, start_team: str) -> str:
-    """Set each segment's team in place; return who has possession after."""
+    """Set each segment's team in place; return who has possession after.
+
+    A KICK hands possession over unless it was flagged too weak to trust with
+    the frame flip (flips_possession is False — see segmentation._should_flip),
+    which keeps team assignment in lockstep with the classification direction.
+    """
     team = start_team
     for seg in segments:
         seg.team = team
-        if seg.action == "KICK" or (seg.action == "PASS" and seg.intercepted):
+        kick_hands_over = seg.action == "KICK" and seg.flips_possession is not False
+        if kick_hands_over or (seg.action == "PASS" and seg.intercepted):
             team = _other(team)
     return team
 

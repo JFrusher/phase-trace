@@ -61,6 +61,13 @@ F_LAT_SCALE_M = 1.5
 F_STRAIGHT_CENTER = 0.85         # net/path-length above this reads deliberate
 F_STRAIGHT_SCALE = 0.10
 F_DIST_SCALE_M = 28.0            # kicks travel far; carries rarely > ~24m
+# Bentness: rectified penalty, positive only when a stroke's straightness falls
+# below F_BENT_CENTER. A real kick is near-straight (~0.95+), so this stays 0
+# for genuine kicks AND for straight long carries (leaving the distance
+# threshold untouched) and only bites a long BENT running break misread as a
+# kick — see W_KICK_BENT.
+F_BENT_CENTER = 0.90
+F_BENT_SCALE = 0.06
 
 # --- classification weights: score_c = B_c + sum(W_c_f * feature_f) -------
 # CARRY is the fixed reference class (score 0, no constants here). KICK is
@@ -72,11 +79,27 @@ W_PASS_BACKWARD = 8.0
 W_PASS_LATERAL = 7.0
 W_PASS_STRAIGHT = 0.0
 W_PASS_DIST = 0.0
+W_PASS_BENT = 0.0
 B_KICK = -6.4               # geometric kick threshold ~27m; shorter strokes stay
 W_KICK_BACKWARD = 0.0       # CARRY (distance is the necessary kick signal)
 W_KICK_LATERAL = 0.0
 W_KICK_STRAIGHT = 0.5
 W_KICK_DIST = 8.0
+W_KICK_BENT = -6.0          # a kick must be STRAIGHT, not merely long: a bent
+                            # 32m running break can't clear the distance bias
+# ponytail: F_BENT_CENTER / W_KICK_BENT set by hand to stop long bent runs
+# reading as kicks; validate against a real trace corpus (Phase 5, tracer.fit /
+# tracer.sweep) before treating them as settled.
+
+# Below this classification confidence (top prob - second), a GEOMETRIC kick
+# does not flip attack direction / possession: a near-tie kick shouldn't
+# silently invert the frame for every segment after it — the same "ambiguous
+# leans CARRY" principle B_KICK already encodes, applied to the flip decision.
+# Kept LOW on purpose: a genuine ~30m kick's confidence is only ~0.14 (KICK
+# barely clears its bias by design), so an aggressive gate would suppress real
+# kick flips. The phantom BENT kick is stopped upstream by W_KICK_BENT instead.
+# Forced kicks (kickoff/restart) and manual K-hint / reclassify kicks always flip.
+KICK_FLIP_MIN_CONF = 0.05
 
 # --- tap correlation ------------------------------------------------------
 DIGIT_BURST_MS = 400        # sequential digit taps within this = one number

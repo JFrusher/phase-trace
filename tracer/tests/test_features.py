@@ -72,7 +72,7 @@ def test_no_time_features():
     # classification must not measure draw time: no pace/speed features exist
     assert "relpace" not in features.FEATURES
     assert "bursty" not in features.FEATURES
-    assert set(features.FEATURES) == {"backward", "lateral", "straight", "dist"}
+    assert set(features.FEATURES) == {"backward", "lateral", "straight", "dist", "bent"}
 
 
 # --- extract: quality features ---------------------------------------------
@@ -82,6 +82,24 @@ def test_straightness_of_straight_leg():
     assert raw["straightness"] == pytest.approx(1.0)
     expected = math.tanh((1.0 - config.F_STRAIGHT_CENTER) / config.F_STRAIGHT_SCALE)
     assert feats["straight"] == pytest.approx(expected)
+
+
+def test_long_bent_stroke_is_not_a_kick():
+    # 32m net displacement but a shallow bend (straightness ~0.85): a running
+    # break, not a kick. Length alone must not clear the kick threshold.
+    bent = path((0, 0, 0.0), (16, 9.87, 1.0), (32, 0, 2.0))
+    feats, raw = features.extract(bent, +1)
+    assert raw["straightness"] == pytest.approx(0.85, abs=0.02)
+    assert feats["bent"] > 0
+    assert features.score(feats)[2] == "CARRY"
+
+
+def test_long_straight_stroke_is_a_kick():
+    # same 32m, dead straight: bent veto is 0, distance carries it to KICK.
+    straight = path((0, 0, 0.0), (16, 0, 1.0), (32, 0, 2.0))
+    feats = features.extract(straight, +1)[0]
+    assert feats["bent"] == 0.0
+    assert features.score(feats)[2] == "KICK"
 
 
 def test_straightness_of_l_shape():

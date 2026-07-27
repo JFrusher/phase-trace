@@ -29,6 +29,11 @@ class Segment:
     players: list = field(default_factory=list)  # list[PlayerTag]
     scores: dict = field(default_factory=dict)   # {class: linear score}, CARRY = 0
     confidence: float | None = None              # top prob minus second prob
+    # Does this segment hand possession to the other team (and flip attack
+    # direction)? A KICK normally does; None means "unset -> a KICK flips"
+    # (backward-compatible default). Set False for a KICK too weak to trust
+    # with the frame flip (see segmentation._should_flip).
+    flips_possession: bool | None = None
 
     @property
     def start_t(self) -> float:

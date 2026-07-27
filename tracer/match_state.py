@@ -16,7 +16,7 @@ from .events import (actor, assign_teams, chain_to_actions, chain_to_events,
                      set_piece_record, summarise, RESTART_SCORE_TYPES)
 from .geometry import canonical_xy, PitchCalibration
 from .keystate import KeyState
-from .segmentation import apply_taps, segment_path
+from .segmentation import apply_taps, reclassify_downstream, segment_path
 
 
 def _other(team):
@@ -340,6 +340,12 @@ class MatchState:
         order = ("CARRY", "PASS", "KICK")
         seg = chain.segments[i]
         seg.action = order[(order.index(seg.action) + 1) % len(order)]
+        # a manual KICK asserts a handover; toggling one on/off re-frames every
+        # segment after it, so re-derive their classification in the new frame
+        seg.flips_possession = seg.action == "KICK"
+        base_dir = (self.attack_dir_home if chain.team == "home"
+                    else -self.attack_dir_home)
+        reclassify_downstream(chain.segments, base_dir, i)
         self._rewind_and_recommit(chain)
 
     def choose_in_goal_outcome(self, outcome: str):

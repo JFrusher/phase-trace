@@ -437,18 +437,63 @@ def _slice_at(smoothed, boundaries):
     return slices
 
 
+def _should_flip(action, confidence, forced) -> bool:
+    """Does this segment hand possession over (flip attack direction)?
+
+    A KICK normally does — the receiver attacks the other way. Two exceptions:
+    a forced kick (kickoff/restart) always flips, it is a kick by law; and a
+    GEOMETRIC kick below KICK_FLIP_MIN_CONF does not, so a barely-a-kick (a
+    long bent run misread as a kick) can't silently invert the frame for every
+    downstream segment. confidence None (segments built outside classification)
+    keeps the old "a KICK flips" behaviour.
+    """
+    if action != "KICK":
+        return False
+    if forced or confidence is None:
+        return True
+    return confidence >= config.KICK_FLIP_MIN_CONF
+
+
 def _classify_slices(slices, attack_dir, force_first, d):
-    """Classify each slice, flipping attack direction after every KICK."""
+    """Classify each slice, flipping attack direction after each handover KICK."""
     segments, direction = [], attack_dir
     for i, sl in enumerate(slices):
         action, evidence = _classify(sl, direction)
-        if i == 0 and force_first:
+        forced = i == 0 and bool(force_first)
+        if forced:
             evidence["forced_by"] = force_first
             action = force_first
+        flips = _should_flip(action, evidence["confidence"], forced)
+        if action == "KICK" and not flips:
+            evidence["flip_suppressed"] = True  # low-confidence kick: frame held
         d["segments"].append(evidence)
         segments.append(Segment(action=action, points=sl,
                                 scores=evidence["scores"],
-                                confidence=evidence["confidence"]))
-        if action == "KICK":
+                                confidence=evidence["confidence"],
+                                flips_possession=flips if action == "KICK" else None))
+        if flips:
             direction = -direction  # receiver attacks the other way
     return segments
+
+
+def reclassify_downstream(segments, base_dir, start_index):
+    """Re-derive direction + geometric class for segments AFTER start_index.
+
+    Toggling a segment's action (canvas reclassify) can add or remove a KICK,
+    which changes the attack-direction frame for everything downstream — those
+    segments were classified in the stale frame. Walk the flip sequence from
+    base_dir and re-run _classify for every segment past start_index in the
+    corrected frame. Segments up to and including start_index keep their
+    (now user-set) action and flips_possession.
+    """
+    direction = base_dir
+    for i, seg in enumerate(segments):
+        if i > start_index:
+            action, evidence = _classify(seg.points, direction)
+            seg.action = action
+            seg.scores = evidence["scores"]
+            seg.confidence = evidence["confidence"]
+            seg.flips_possession = (_should_flip(action, evidence["confidence"], False)
+                                    if action == "KICK" else None)
+        if seg.action == "KICK" and seg.flips_possession is not False:
+            direction = -direction

@@ -556,6 +556,20 @@ class MatchState:
                                        o.alt_mark)
         self._changed()
 
+    def flip_possession(self):
+        """Flip who holds the ball for the upcoming line — a kick regathered, or
+        any handover the traced line couldn't show. The header possession tag is
+        the button. Works with no origin yet (a mis-set kickoff), and keeps
+        last_origin's team in step so the tag and the set-piece chip agree on who
+        feeds the next line.
+        """
+        self.possession = _other(self.possession)
+        o = self.last_origin
+        if o is not None:
+            self.last_origin = ChainOrigin(o.reason, self.possession, o.mark,
+                                           o.alt_mark)
+        self._changed()
+
     def flip_origin_mark(self):
         """Swap a lineout between its two lawful marks — it bounced, or it didn't."""
         o = self.last_origin

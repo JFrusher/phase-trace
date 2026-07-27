@@ -78,7 +78,8 @@ def _build_header(m, on_undo):
         w["away_chip"] = ui.label().classes(chip_cls) \
             .style(f"background:{m.team_colors['away']}")
         w["poss"] = ui.label().classes(
-            "px-2 py-0.5 rounded-md text-white text-xl font-bold")
+            "px-2 py-0.5 rounded-md text-white text-xl font-bold cursor-pointer") \
+            .on("click", lambda: m.flip_possession()) \
         w["status"] = ui.label().classes("text-sm text-gray-500")
         ui.button("Halftime flip", on_click=m.halftime_flip).props("outline")
         ui.button("Review", on_click=lambda: open_review(m)).props("outline")

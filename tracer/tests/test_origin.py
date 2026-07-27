@@ -9,7 +9,7 @@ from tracer import config, fixtures
 from tracer.continuity import PathPoint, Segment
 from tracer.events import (assign_teams, compute_score, default_in_goal_outcome,
                            halfway_mark, infer_origin)
-from tracer.match_state import MatchState
+from tracer.match_state import MatchState, _other
 
 PX = config.PX_PER_M
 LEFT = config.IN_GOAL_DEPTH_M * PX
@@ -348,6 +348,29 @@ def test_the_chip_flips_the_team():
     assert m.possession == "home"
     assert m.last_origin.team == "home"
     assert m.last_origin.reason == "turnover_open"   # type never changes
+
+
+def test_the_header_tag_flips_possession():
+    m = _match()
+    m.clock.start(t=100.0)
+    t = _trace(m, 20, 34, 100.0, 3.0)
+    m.key_down("a", t)
+    before = m.possession
+    m.flip_possession()                     # the header possession tag is a button
+    assert m.possession == _other(before)
+    assert m.last_origin.team == m.possession        # origin kept in step
+    m.flip_possession()                     # and back
+    assert m.possession == before
+    assert m.last_origin.team == before
+
+
+def test_flip_possession_works_before_any_origin():
+    m = _match()                            # kickoff, nothing traced yet
+    before = m.possession
+    assert m.last_origin is None
+    m.flip_possession()                     # a mis-set kickoff team, one click to fix
+    assert m.possession == _other(before)
+    assert m.last_origin is None            # nothing to keep in step, no crash
 
 
 def test_a_lineout_chip_offers_the_other_mark():

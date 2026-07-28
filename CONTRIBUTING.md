@@ -13,7 +13,7 @@ Python 3.11+.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest -q          # 256 tests, ~3 seconds
+python -m pytest -q          # 326 tests, ~4 seconds
 ```
 
 CI runs the same `pytest -q` on every push and pull request, on 3.11. If it's

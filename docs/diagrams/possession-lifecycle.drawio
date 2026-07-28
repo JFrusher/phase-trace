@@ -1,46 +1,46 @@
-<mxfile host="phase-trace-docs">
+<mxfile host="65bd71144e">
     <diagram id="chain-state" name="1 · Chain state machine">
-        <mxGraphModel dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="980" math="0" shadow="0" adaptiveColors="auto">
+        <mxGraphModel dx="2872" dy="951" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="980" math="0" shadow="0" adaptiveColors="auto">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="Possession lifecycle — MatchState, one chain from press to commit" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+                <mxCell id="title" value="Possession lifecycle — MatchState, one chain from press to commit" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
                     <mxGeometry x="40" y="14" width="900" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="sub" value="UML state machine. Note there is no separate &quot;corrected&quot; state: every correction rewinds to the pre-commit snapshot and replays the same commit." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+                <mxCell id="sub" value="UML state machine. Note there is no separate &quot;corrected&quot; state: every correction rewinds to the pre-commit snapshot and replays the same commit." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" parent="1" vertex="1">
                     <mxGeometry x="40" y="44" width="1300" height="24" as="geometry"/>
                 </mxCell>
-                <mxCell id="start" value="" style="ellipse;html=1;fillColor=#333333;strokeColor=none;" vertex="1" parent="1">
+                <mxCell id="start" value="" style="ellipse;html=1;fillColor=#333333;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="195" y="82" width="30" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="s_await" value="&lt;b&gt;Awaiting press&lt;/b&gt;&#xa;pending_start_reason is set&#xa;last_origin.mark is armed (the target dot)&#xa;armed_next_action set only by a penalty option" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" vertex="1" parent="1">
+                <mxCell id="s_await" value="&lt;b&gt;Awaiting press&lt;/b&gt;&#xa;pending_start_reason is set&#xa;last_origin.mark is armed (the target dot)&#xa;armed_next_action set only by a penalty option" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" parent="1" vertex="1">
                     <mxGeometry x="60" y="140" width="300" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="s_rec" value="&lt;b&gt;Recording&lt;/b&gt;&#xa;ChainRecorder accumulating PathPoints&#xa;KeyState appending taps and Shift intervals&#xa;every recorded point carries the snap offset" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" vertex="1" parent="1">
+                <mxCell id="s_rec" value="&lt;b&gt;Recording&lt;/b&gt;&#xa;ChainRecorder accumulating PathPoints&#xa;KeyState appending taps and Shift intervals&#xa;every recorded point carries the snap offset" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" parent="1" vertex="1">
                     <mxGeometry x="60" y="340" width="300" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="s_seg" value="&lt;b&gt;Segmenting&lt;/b&gt;&#xa;segment_path() then apply_taps()&#xa;force_first applied inside the loop, so the&#xa;direction flip reaches the segments after it" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" vertex="1" parent="1">
+                <mxCell id="s_seg" value="&lt;b&gt;Segmenting&lt;/b&gt;&#xa;segment_path() then apply_taps()&#xa;force_first applied inside the loop, so the&#xa;direction flip reaches the segments after it" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=20;" parent="1" vertex="1">
                     <mxGeometry x="60" y="540" width="300" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="s_commit" value="&lt;b&gt;Committed&lt;/b&gt; — _commit_chain()&#xa;━━━━━━━━━━━&#xa;entry / snapshot _precommit&#xa;entry / assign_teams — a KICK, or an intercepted PASS, hands over&#xa;entry / _resolve_score — tapped score, in-goal chooser, or a kick through the posts&#xa;entry / infer_origin — decides how the NEXT possession begins&#xa;entry / chain_to_events + chain_to_actions — the two output streams&#xa;entry / on_commit(chain) → colour-coded redraw&#xa;entry / on_change() → chips, header, autosave" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;arcSize=12;" vertex="1" parent="1">
+                <mxCell id="s_commit" value="&lt;b&gt;Committed&lt;/b&gt; — _commit_chain()&#xa;━━━━━━━━━━━&#xa;entry / snapshot _precommit&#xa;entry / assign_teams — a KICK, or an intercepted PASS, hands over&#xa;entry / _resolve_score — tapped score, in-goal chooser, or a kick through the posts&#xa;entry / infer_origin — decides how the NEXT possession begins&#xa;entry / chain_to_events + chain_to_actions — the two output streams&#xa;entry / on_commit(chain) → colour-coded redraw&#xa;entry / on_change() → chips, header, autosave" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;arcSize=12;" parent="1" vertex="1">
                     <mxGeometry x="520" y="490" width="440" height="230" as="geometry"/>
                 </mxCell>
-                <mxCell id="s_recommit" value="&lt;b&gt;Re-committing&lt;/b&gt;&#xa;_rewind_and_recommit()&#xa;━━━━━━━━&#xa;restore _precommit,&#xa;truncate events[] and actions[],&#xa;run _commit_chain again over&#xa;the same points" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;arcSize=20;" vertex="1" parent="1">
+                <mxCell id="s_recommit" value="&lt;b&gt;Re-committing&lt;/b&gt;&#xa;_rewind_and_recommit()&#xa;━━━━━━━━&#xa;restore _precommit,&#xa;truncate events[] and actions[],&#xa;run _commit_chain again over&#xa;the same points" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;arcSize=20;" parent="1" vertex="1">
                     <mxGeometry x="1040" y="520" width="300" height="160" as="geometry"/>
                 </mxCell>
-                <mxCell id="n_end" value="&lt;b&gt;What ends a chain&lt;/b&gt;&#xa;━━━━━━━━&#xa;A or Space — the authoritative signal&#xa;S or F — also records a scrum or penalty&#xa;the traced line leaving the field — in law&#xa;the play is already over&#xa;mouse-up — defensive fallback only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;fontSize=11;fontColor=#666666;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                <mxCell id="n_end" value="&lt;b&gt;What ends a chain&lt;/b&gt;&#xa;━━━━━━━━&#xa;A or Space — the authoritative signal&#xa;S or F — also records a scrum or penalty&#xa;the traced line leaving the field — in law&#xa;the play is already over&#xa;mouse-up — defensive fallback only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;fontSize=11;fontColor=#666666;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
                     <mxGeometry x="60" y="700" width="300" height="150" as="geometry"/>
                 </mxCell>
-                <mxCell id="n_undo" value="&lt;b&gt;Two snapshots, taken at different moments&lt;/b&gt;&#xa;━━━━━━━━━━━&#xa;_undo is taken at mouse_down, because taps landing mid-trace (a try, a turnover) have already&#xa;mutated events and possession by the time the chain commits — undo has to take those back too.&#xa;_precommit is taken at commit, because re-classifying happens via a CLICK, and a click is itself a&#xa;mouse_down that would overwrite _undo with post-commit state before the handler ever runs." style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;fontSize=11;fontColor=#666666;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                <mxCell id="n_undo" value="&lt;b&gt;Two snapshots, taken at different moments&lt;/b&gt;&#xa;━━━━━━━━━━━&#xa;_undo is taken at mouse_down, because taps landing mid-trace (a try, a turnover) have already&#xa;mutated events and possession by the time the chain commits — undo has to take those back too.&#xa;_precommit is taken at commit, because re-classifying happens via a CLICK, and a click is itself a&#xa;mouse_down that would overwrite _undo with post-commit state before the handler ever runs." style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;fontSize=11;fontColor=#666666;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
                     <mxGeometry x="520" y="740" width="820" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="start" target="s_await">
+                <mxCell id="e_start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;" parent="1" source="start" target="s_await" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_press" value="mouse_down — the whole path is shifted&#xa;onto the armed mark, not just its first point" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;align=left;" edge="1" parent="1" source="s_await" target="s_rec">
+                <mxCell id="e_press" value="mouse_down — the whole path is shifted&#xa;onto the armed mark, not just its first point" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;align=left;" parent="1" source="s_await" target="s_rec" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_move" value="mouse_move" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="s_rec" target="s_rec">
+                <mxCell id="e_move" value="mouse_move" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="s_rec" target="s_rec" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="430" y="368"/>
@@ -48,26 +48,41 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="e_end" value="end_chain(t)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;" edge="1" parent="1" source="s_rec" target="s_seg">
+                <mxCell id="e_end" value="end_chain(t)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;" parent="1" source="s_rec" target="s_seg" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_reject" value="no segments — too few points,&#xa;or under MIN_MOVEMENT_PX" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s_seg" target="s_await">
+                <mxCell id="e_reject" value="no segments — too few points,&#xa;or under MIN_MOVEMENT_PX" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="s_seg" target="s_await" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="31" y="595"/>
+                            <mxPoint x="31" y="195"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_commit" value="segments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;" parent="1" source="s_seg" target="s_commit" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_commit" value="segments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;" edge="1" parent="1" source="s_seg" target="s_commit">
+                <mxCell id="e_fix" value="reclassify_segment(i)&#xa;choose_in_goal_outcome()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=11;" parent="1" source="s_commit" target="s_recommit" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_fix" value="reclassify_segment(i)&#xa;choose_in_goal_outcome()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=11;" edge="1" parent="1" source="s_commit" target="s_recommit">
+                <mxCell id="e_reback" value="re-emitted from the same points" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="s_recommit" target="s_commit" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1190" y="442"/>
+                            <mxPoint x="740" y="442"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_next" value="origin arms the next press" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="s_commit" target="s_await" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_reback" value="re-emitted from the same points" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s_recommit" target="s_commit">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="e_next" value="origin arms the next press" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s_commit" target="s_await">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="e_undo" value="Ctrl+Z — undo_last()&#xa;one level, no stack" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontSize=11;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="s_commit" target="s_await">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="e_undo" value="Ctrl+Z — undo_last()&#xa;one level, no stack" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontSize=11;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1.008;entryY=0.85;entryDx=0;entryDy=0;jumpStyle=arc;jumpSize=16;entryPerimeter=0;" parent="1" source="s_commit" target="s_await" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="495" y="663"/>
+                            <mxPoint x="495" y="234"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
@@ -162,7 +177,7 @@
                         <mxPoint x="840" y="568" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="m10" value="Segment[] plus last_debug (the dev drawer's evidence)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;endSize=8;dashed=1;rounded=0;strokeColor=#666666;fontSize=11;" edge="1" parent="1">
+                <mxCell id="m10" value="Segment[] plus last_debug (the dev drawer&#39;s evidence)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;endSize=8;dashed=1;rounded=0;strokeColor=#666666;fontSize=11;" edge="1" parent="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="840" y="612" as="sourcePoint"/>
                         <mxPoint x="600" y="612" as="targetPoint"/>
@@ -222,7 +237,7 @@
                         <mxPoint x="600" y="1008" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="snote" value="Timestamps are stamped server-side on event arrival (time.monotonic()) — the browser's MouseEventArguments carries no client clock. Fine on localhost; WAN latency jitter would degrade tap correlation, which is the one place timing still matters." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+                <mxCell id="snote" value="Timestamps are stamped server-side on event arrival (time.monotonic()) — the browser&#39;s MouseEventArguments carries no client clock. Fine on localhost; WAN latency jitter would degrade tap correlation, which is the one place timing still matters." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
                     <mxGeometry x="40" y="1100" width="1600" height="40" as="geometry"/>
                 </mxCell>
             </root>

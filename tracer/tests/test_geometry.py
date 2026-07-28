@@ -43,6 +43,45 @@ def test_path_ending_in_midfield_is_not_out():
     assert not cal.ends_in_touch(WIDTH / 2)
 
 
+def test_crossing_a_touchline_needs_the_line_actually_passed():
+    # the auto-end fires on this, so the touch margin must NOT count: a winger
+    # runs inside it all game without the ball going out
+    assert cal.crossed_touch(0.0)
+    assert cal.crossed_touch(-5.0)
+    assert cal.crossed_touch(WIDTH)
+    assert not cal.crossed_touch(config.TOUCH_MARGIN_M * PX)
+    assert not cal.crossed_touch(WIDTH / 2)
+
+
+def test_in_goal_starts_past_the_try_line():
+    assert not cal.in_goal(LEFT)                 # on the try line is field of play
+    assert cal.in_goal(LEFT - 1.0)
+    assert cal.in_goal(LEFT + (config.PITCH_LENGTH_M + 1) * PX)
+    assert not cal.in_goal(LEFT + 50 * PX)
+
+
+def test_dead_ball_line_is_the_back_of_the_in_goal():
+    dead_left = LEFT - config.IN_GOAL_DEPTH_M * PX
+    assert cal.crossed_dead_ball(dead_left)
+    assert cal.crossed_dead_ball(dead_left - 10)
+    assert not cal.crossed_dead_ball(dead_left + 10)      # still in the in-goal
+    assert not cal.crossed_dead_ball(LEFT + 50 * PX)
+
+
+def test_which_in_goal_depends_on_which_way_you_attack():
+    assert cal.own_in_goal(LEFT - 5, +1)         # attacking right: own end is left
+    assert not cal.own_in_goal(LEFT - 5, -1)
+    assert cal.is_left_end(LEFT - 5)
+    assert not cal.is_left_end(LEFT + 99 * PX)
+
+
+def test_set_piece_marks_sit_on_their_lines():
+    assert cal.field_x_m(cal.drop_out_mark_x(True)) == config.TWENTY_TWO_M
+    assert cal.field_x_m(cal.drop_out_mark_x(False)) == 78.0
+    assert cal.field_x_m(cal.five_m_mark_x(True)) == 5.0
+    assert cal.field_x_m(cal.five_m_mark_x(False)) == 95.0
+
+
 def test_own_22_depends_on_which_way_you_attack():
     assert cal.in_own_22(LEFT + 10 * PX, +1)      # attacking right: own line is left
     assert not cal.in_own_22(LEFT + 10 * PX, -1)
@@ -76,6 +115,10 @@ def test_calibration_holds_at_every_offered_scale():
         assert c.in_own_22(left + 10 * px, +1)
         assert c.ends_in_touch(0.0)
         assert not c.ends_in_touch(config.PITCH_WIDTH_M * px / 2)
+        assert c.crossed_touch(config.PITCH_WIDTH_M * px)
+        assert c.in_goal(left - 1) and not c.in_goal(left + 50 * px)
+        assert c.crossed_dead_ball(left - config.IN_GOAL_DEPTH_M * px)
+        assert c.field_x_m(c.drop_out_mark_x(True)) == config.TWENTY_TWO_M
 
 
 def test_on_the_full_law_mirrors_for_the_other_direction():

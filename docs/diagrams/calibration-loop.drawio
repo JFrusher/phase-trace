@@ -1,0 +1,131 @@
+<mxfile host="65bd71144e">
+    <diagram id="calibration" name="Calibration loop">
+        <mxGraphModel dx="1452" dy="951" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1120" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Calibration — how the recognizer gets tuned, and who decides" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="14" width="1000" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="sub" value="Two ways in: correct a misread live and it is logged, or save the trace in dev mode and promote it to a regression. Both feed the same labelled corpus, and the same three read-only tools propose numbers off it." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="44" width="1600" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="zlive" value="DURING THE MATCH — corrections log themselves" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="100" width="800" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="zdev" value="DEV MODE (?dev=1) — growing the regression corpus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="100" width="780" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="ztune" value="BETWEEN MATCHES — propose, decide, edit by hand" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="520" width="1620" height="560" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor" value="Analyst" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalLabelPosition=bottom;verticalAlign=top;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="155" width="55" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1" value="&lt;b&gt;a stroke is misread — click it&lt;/b&gt;&#xa;reclassify_segment(i) cycles CARRY → PASS → KICK, re-derives every&#xa;segment after it in the corrected direction frame, and re-commits." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="145" width="600" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2" value="&lt;b&gt;MatchState._log_correction → on_correction(payload)&lt;/b&gt;&#xa;traced points · attack_dir · the squashed features · scores, probabilities,&#xa;confidence · minute and team. A no-op unless a sink is wired." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="245" width="600" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3" value="&lt;b&gt;tracer/feedback/corrections.db&lt;/b&gt;  (SQLite, gitignored)&#xa;kind = reclassify | hint | team | type | delete&#xa;&#xa;Only kind=&#39;reclassify&#39; ever trains weights. A K/P/R hint can relabel a&#xa;carry-shaped gesture as a kick, which would poison the geometric label;&#xa;hints and Review edits are kept for the audit record and nothing else." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="335" width="600" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" value="&lt;b&gt;dev drawer → Save last trace&lt;/b&gt;&#xa;snapshots the chain&#39;s raw inputs: points, taps, Shift intervals, possession." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="145" width="720" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="d2" value="&lt;b&gt;tracer/dev_traces/&amp;lt;name&amp;gt;.json&lt;/b&gt;  (gitignored)&#xa;Replaying the file must reproduce the identical report — the pipeline is&#xa;deterministic on identical points, and that is the check that it stays so." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="245" width="720" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="d3" value="&lt;b&gt;promote: move it to tracer/tests/traces/ and add an &quot;expect&quot; key&lt;/b&gt;&#xa;The vocabulary is whatever fixtures.check() understands — actions, teams,&#xa;event types, origins. test_corpus.py then picks it up automatically as&#xa;trace:&amp;lt;name&amp;gt;, so a real misread becomes a permanent regression." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="345" width="720" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_corpus" value="&lt;b&gt;THE LABELLED CORPUS&lt;/b&gt;      fixtures.SCENARIOS — 39 synthetic scenarios, deterministic per seed, with human-ish tremor, speed variation and corner rounding&#xa;tracer/tests/traces/ — promoted real traces      ·      corrections.db — the reclassify rows only, with features RE-EXTRACTED from the stored points under the current config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="560" width="1540" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_sweep" value="&lt;b&gt;python -m tracer.sweep&lt;/b&gt;&#xa;Grid-sweeps BOUNDARY_ACCEPT,&#xa;MIN_SEGMENT_M and B_KICK over the&#xa;whole corpus → a pass count per&#xa;combination, worst first." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="690" width="350" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_fit" value="&lt;b&gt;python -m tracer.fit&lt;/b&gt;&#xa;Multinomial logistic regression,&#xa;CARRY the fixed reference class,&#xa;L2-regularised toward the CURRENT&#xa;config so proposals stay anchored." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="690" width="350" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_cal" value="&lt;b&gt;python -m tracer.calibrate&lt;/b&gt;&#xa;The same fit, plus the logged&#xa;reclassifies. Run it before a session.&#xa;With an empty DB its output is&#xa;identical to tracer.fit." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="690" width="350" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_never" value="&lt;b&gt;None of the three writes config.py&lt;/b&gt;&#xa;There is no automatic tuning path in this&#xa;repo, on purpose. The output is a&#xa;proposal; the edit is a decision." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="1250" y="690" width="370" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_report" value="&lt;b&gt;printed to stdout&lt;/b&gt;&#xa;pass count per threshold combination, with the failing scenario names&#xa;label → predicted confusion under the proposal&#xa;the proposed config block, ready to paste&#xa;corpus pass count at current config versus at the proposal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="850" width="500" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_gate" value="&lt;b&gt;a human reads&#xa;the numbers&lt;/b&gt;&#xa;unconvinced → trace more,&#xa;promote more, run again" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="845" width="300" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_edit" value="&lt;b&gt;edit tracer/config.py&lt;/b&gt;&#xa;by hand&#xa;&#xa;Every threshold and weight the&#xa;recognizer depends on is a flat&#xa;module-level constant there." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="1020" y="850" width="270" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="g_test" value="&lt;b&gt;python -m pytest -q&lt;/b&gt;&#xa;&#xa;test_corpus.py replays the whole&#xa;corpus at baseline config, so an&#xa;edit that regresses the recognizer&#xa;fails here and in CI." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="850" width="270" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="foot" value="Calibration status: the constants in config.py are tuned against the 39 synthetic scenarios plus the pace-invariance fence — not against a real match. The numbers most likely to move once real footage is traced end to end are the boundary accept level, the ~27 m geometric kick threshold, and the origin_factor weights in translators/rugby_weights.json." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1000" width="1540" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="actor" target="l1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_l1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="l1" target="l2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_l2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="l2" target="l3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="d1" target="d2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="d2" target="d3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_l3c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="l3" target="g_corpus" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d3c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="d3" target="g_corpus" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_corpus" target="g_sweep" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_corpus" target="g_fit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_corpus" target="g_cal" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_sweep" target="g_report" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_fr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_fit" target="g_report" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_cal" target="g_report" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1035" y="811"/>
+                            <mxPoint x="330" y="811"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_rg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_report" target="g_gate" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" parent="1" source="g_gate" target="g_edit" edge="1">
+                    <mxGeometry x="-0.9143" y="36" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_et" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="g_edit" target="g_test" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

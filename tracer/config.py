@@ -11,12 +11,22 @@ PX_PER_M = 8                # fixed 1:1 scale, no responsive resize (MVP)
 PITCH_LENGTH_M = 100        # try line to try line
 PITCH_WIDTH_M = 70
 IN_GOAL_DEPTH_M = 10
+GOAL_WIDTH_M = 5.6          # gap between the posts, centred on the pitch width;
+                            # decides whether an at-goal penalty kick went over
 TWENTY_TWO_M = 22           # the 22 line, which decides the kick-to-touch law
 TOUCH_MARGIN_M = 2.0        # a trace finishing this close to a touchline counts
                             # as out: the browser stops reporting mousemove once
                             # the cursor leaves the image, so a ball kicked out
                             # is a path that STOPS at the edge, never one that
                             # visibly crosses it
+SNAP_TOLERANCE_M = 10.0     # a new possession's press snaps onto an INFERRED start
+                            # mark (lineout, scrum, turnover, penalty) only if it
+                            # lands within this radius; a press further out is taken
+                            # at face value — a deliberate free start — so one wild
+                            # click can't drag the whole trace onto a guessed mark.
+                            # Centre-spot restarts (CENTRE_SPOT_REASONS) are a hard
+                            # law and always snap, tolerance or not. The mark is
+                            # drawn as a target (chips._target) so operators aim in.
 
 # --- segmentation thresholds (the tunable heart of Live Trace) -----------
 # Spacing/windows are in METRES OF TRACED PATH, not milliseconds: the line is
@@ -59,6 +69,13 @@ F_LAT_SCALE_M = 1.5
 F_STRAIGHT_CENTER = 0.85         # net/path-length above this reads deliberate
 F_STRAIGHT_SCALE = 0.10
 F_DIST_SCALE_M = 28.0            # kicks travel far; carries rarely > ~24m
+# Bentness: rectified penalty, positive only when a stroke's straightness falls
+# below F_BENT_CENTER. A real kick is near-straight (~0.95+), so this stays 0
+# for genuine kicks AND for straight long carries (leaving the distance
+# threshold untouched) and only bites a long BENT running break misread as a
+# kick — see W_KICK_BENT.
+F_BENT_CENTER = 0.90
+F_BENT_SCALE = 0.06
 
 # --- classification weights: score_c = B_c + sum(W_c_f * feature_f) -------
 # CARRY is the fixed reference class (score 0, no constants here). KICK is
@@ -70,11 +87,27 @@ W_PASS_BACKWARD = 8.0
 W_PASS_LATERAL = 7.0
 W_PASS_STRAIGHT = 0.0
 W_PASS_DIST = 0.0
+W_PASS_BENT = 0.0
 B_KICK = -6.4               # geometric kick threshold ~27m; shorter strokes stay
 W_KICK_BACKWARD = 0.0       # CARRY (distance is the necessary kick signal)
 W_KICK_LATERAL = 0.0
 W_KICK_STRAIGHT = 0.5
 W_KICK_DIST = 8.0
+W_KICK_BENT = -6.0          # a kick must be STRAIGHT, not merely long: a bent
+                            # 32m running break can't clear the distance bias
+# ponytail: F_BENT_CENTER / W_KICK_BENT set by hand to stop long bent runs
+# reading as kicks; validate against a real trace corpus (Phase 5, tracer.fit /
+# tracer.sweep) before treating them as settled.
+
+# Below this classification confidence (top prob - second), a GEOMETRIC kick
+# does not flip attack direction / possession: a near-tie kick shouldn't
+# silently invert the frame for every segment after it — the same "ambiguous
+# leans CARRY" principle B_KICK already encodes, applied to the flip decision.
+# Kept LOW on purpose: a genuine ~30m kick's confidence is only ~0.14 (KICK
+# barely clears its bias by design), so an aggressive gate would suppress real
+# kick flips. The phantom BENT kick is stopped upstream by W_KICK_BENT instead.
+# Forced kicks (kickoff/restart) and manual K-hint / reclassify kicks always flip.
+KICK_FLIP_MIN_CONF = 0.05
 
 # --- tap correlation ------------------------------------------------------
 DIGIT_BURST_MS = 400        # sequential digit taps within this = one number
@@ -107,10 +140,41 @@ CONVERSION_KEYS = {"c": "conversion", "m": "conversion_missed"}
 # the tracer says what happened, the translator says what it is worth.
 START_REASONS = ("kickoff", "restart", "drop_out_22", "scrum", "lineout",
                  "penalty", "turnover_open", "interception", "kick_return")
+# Taken from the centre spot, always as a drop kick. Both facts are certain
+# before the trace exists, so the start point is snapped there and the first
+# segment is a KICK whatever its shape — a restart tapped short would
+# otherwise read as a carry and hand the ball to the wrong side.
+CENTRE_SPOT_REASONS = ("kickoff", "restart")
+# Reasons whose first stroke is inherently a drop kick, so it is forced to KICK
+# however it was drawn (a short 22 drop-out would otherwise read as a carry).
+# Superset of CENTRE_SPOT_REASONS: those two snap to halfway as well, this only
+# forces the class. drop_out_22 has its own mark, so it snaps to that instead.
+KICK_START_REASONS = ("kickoff", "restart", "drop_out_22")
+CHIP_CLEARANCE_M = 9        # how far a chip sits off a mark you must press on
 TAPPED_START_REASONS = {"s": "scrum", "f": "penalty"}
 PENALTY_WON_TYPE = "penalty_won"   # the discrete event an F tap also logs
 PENALTY_OPTIONS = ("kick_to_touch", "at_goal", "tap_and_go", "scrum")
 PENALTY_DEFAULT_OPTION = "kick_to_touch"
+# Penalty options whose ensuing stroke is a kick: picking one forces the next
+# segment to KICK (a penalty to touch / at goal is a kick, not open play).
+KICK_ARMED_ACTIONS = ("kick_to_touch", "kick_at_goal")
+# What a trace ending over a try line meant. Grounding is the one thing a line
+# genuinely cannot show, so this is a chooser like the penalty options: the
+# geometry picks the likely one, ignoring the chip accepts it.
+IN_GOAL_OUTCOMES = ("try", "held_up", "drop_out")
+
+# Start reasons that are set pieces: their win/loss is inferred from who fed
+# the ball vs who came away with it (events.set_piece_record).
+SET_PIECE_REASONS = ("scrum", "lineout")
+
+# --- discipline / errors --------------------------------------------------
+# The penalty reason is a thing a traced line cannot show, so it is a chooser
+# chip like the penalty options — absent until picked (missing pieces allowed).
+PENALTY_REASONS = ("offside", "high", "ruck", "scrum", "foul", "other")
+# Errors are pure data annotations: the turnover they cause is already inferred
+# at chain end, so tapping one only records what went wrong and against whom.
+# Tap while tracing the action that erred — the erring team is who holds the ball.
+ERROR_KEYS = {"e": "knock_on", "w": "forward_pass", "h": "handling"}
 
 # --- scoring (rugby union point values) -----------------------------------
 # ponytail: union only; swap this map for another code's values if needed.

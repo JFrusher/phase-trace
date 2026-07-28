@@ -5,10 +5,11 @@ certain (a kick finishing at a touchline is a lineout, a score is a restart)
 or explicitly typed. Only the TEAM is ambiguous, and the chip flips that.
 """
 
-from tracer import config
+from tracer import config, fixtures
 from tracer.continuity import PathPoint, Segment
-from tracer.events import assign_teams, compute_score, infer_origin
-from tracer.match_state import MatchState
+from tracer.events import (assign_teams, compute_score, default_in_goal_outcome,
+                           halfway_mark, infer_origin)
+from tracer.match_state import MatchState, _other
 
 PX = config.PX_PER_M
 LEFT = config.IN_GOAL_DEPTH_M * PX
@@ -23,17 +24,23 @@ def _seg(action, x0_m, x1_m, y0=MID_Y, y1=MID_Y, **kw):
 
 
 def _origin(segments, start_team="home", scored=None, armed=None,
-            attack_dir_home=1):
+            attack_dir_home=1, in_goal=None):
     final = assign_teams(segments, start_team)
     return infer_origin(segments=segments, chain_start_team=start_team,
                         final_team=final, scored_team=scored, armed=armed,
-                        attack_dir_home=attack_dir_home)
+                        attack_dir_home=attack_dir_home,
+                        in_goal_outcome=in_goal)
 
 
-def test_a_score_restarts_with_the_scoring_team_receiving():
+def _in_goal_default(segments, start_team="home", attack_dir_home=1):
+    assign_teams(segments, start_team)
+    return default_in_goal_outcome(segments, attack_dir_home)
+
+
+def test_a_score_restarts_with_the_conceding_team_kicking():
     o = _origin([_seg("CARRY", 80, 99)], scored="home")
     assert o.reason == "restart"
-    assert o.team == "home"
+    assert o.team == "away"      # they conceded, so they hold the ball to kick
 
 
 def test_kick_finishing_at_a_touchline_is_a_lineout_to_the_other_team():
@@ -82,6 +89,60 @@ def test_plain_carry_end_is_an_open_turnover_marked_where_it_died():
     assert round((o.mark[0] - LEFT) / PX, 1) == 32.0
 
 
+# --- out of play: touch, in-goal, dead ball ---------------------------------
+def test_carrier_crossing_a_touchline_is_a_lineout_to_the_other_team():
+    o = _origin([_seg("CARRY", 20, 32, y1=-2.0)])
+    assert o.reason == "lineout"
+    assert o.team == "away"          # you don't throw in to your own mistake
+    assert o.alt_mark is None        # the kick law has nothing to say here
+    assert round((o.mark[0] - LEFT) / PX, 1) == 32.0
+
+
+def test_carrier_running_near_the_touchline_stays_in_play():
+    inside = config.TOUCH_MARGIN_M * PX      # inside the kick margin, still on
+    o = _origin([_seg("CARRY", 20, 32, y1=inside)])
+    assert o.reason == "turnover_open"
+
+
+def test_a_trace_ending_in_the_attacking_in_goal_reads_as_a_try():
+    assert _in_goal_default([_seg("CARRY", 90, 103)]) == "try"
+
+
+def test_a_kick_into_the_in_goal_reads_as_a_drop_out_not_a_try():
+    # the defenders field it far more often than the chase wins the race
+    assert _in_goal_default([_seg("KICK", 60, 103)]) == "drop_out"
+
+
+def test_a_trace_ending_in_your_own_in_goal_reads_as_a_drop_out():
+    assert _in_goal_default([_seg("CARRY", 10, -3)]) == "drop_out"
+
+
+def test_nothing_to_choose_when_the_trace_stayed_on_the_field():
+    assert _in_goal_default([_seg("CARRY", 20, 32)]) is None
+
+
+def test_held_up_is_a_five_metre_scrum_to_the_attacking_side():
+    o = _origin([_seg("CARRY", 90, 103)], in_goal="held_up")
+    assert o.reason == "scrum"
+    assert o.team == "home"                              # attacking that end
+    assert round((o.mark[0] - LEFT) / PX, 1) == 95.0     # 5m out
+
+
+def test_drop_out_goes_to_the_side_defending_that_in_goal():
+    o = _origin([_seg("CARRY", 90, 103)], in_goal="drop_out")
+    assert o.reason == "drop_out_22"
+    assert o.team == "away"                              # away defends the right
+    assert round((o.mark[0] - LEFT) / PX, 1) == 78.0     # their 22
+
+
+def test_ball_kicked_over_the_dead_ball_line_is_a_drop_out():
+    # no choice to make: it is dead, whoever put it there
+    o = _origin([_seg("KICK", 60, 111)])
+    assert o.reason == "drop_out_22"
+    assert o.team == "away"
+    assert round((o.mark[0] - LEFT) / PX, 1) == 78.0
+
+
 # --- tapped origins, through the real MatchState ---------------------------
 def _trace(m, x0_m, x1_m, t0, dur, y=MID_Y, y1=None, n=60):
     y1 = y if y1 is None else y1
@@ -93,13 +154,66 @@ def _trace(m, x0_m, x1_m, t0, dur, y=MID_Y, y1=None, n=60):
     return t0 + dur
 
 
+def _match():
+    """Mid-match, clock stopped: a fresh match pends a kickoff, which snaps the
+    start to the centre spot and forces the first segment to a KICK."""
+    return fixtures.open_play_match(home="ENG", away="WAL")
+
+
 def test_first_chain_of_the_match_is_a_kickoff():
     m = MatchState("ENG", "WAL")
     assert m.pending_start_reason == "kickoff"
 
 
-def test_scrum_tap_ends_the_play_and_feeds_the_other_team():
+# --- restarts: taken from the centre spot, always a kick --------------------
+def test_a_kickoff_starts_from_the_centre_spot_wherever_you_press():
     m = MatchState("ENG", "WAL")
+    m.clock.start(t=100.0)
+    at = m.mouse_down(LEFT + 20 * PX, MID_Y + 60, 100.0)   # a sloppy press
+    assert at == halfway_mark(m.cal)          # returned so the canvas draws it
+    assert (m.recorder.points[0].x, m.recorder.points[0].y) == at
+    assert round((m.recorder.points[0].x - LEFT) / PX) == 50
+
+
+def test_a_snapped_kickoff_shifts_the_whole_path_not_just_its_start():
+    # moving only the first point would leave the gap between the spot and the
+    # press as a leg of its own — and that leg would become the kick
+    m = MatchState("ENG", "WAL")
+    m.clock.start(t=100.0)
+    t = _trace(m, 20, 60, 100.0, 1.0)         # pressed 30m left of the spot
+    m.key_down("a", t)
+    assert [s.action for s in m.last_chain.segments] == ["KICK"]
+    pts = m.last_chain.segments[0].points
+    assert round((pts[0].x - LEFT) / PX) == 50          # taken from the spot
+    assert round((pts[-1].x - LEFT) / PX) == 90         # 40m drawn, 40m kicked
+
+
+def test_a_restart_is_a_kick_however_short_it_was_drawn():
+    # a restart tapped short is still a kick, and reading it as a carry would
+    # leave the ball with the side that just conceded
+    m = MatchState("ENG", "WAL")
+    m.clock.start(t=100.0)
+    t = _trace(m, 50, 58, 100.0, 1.0)         # 8m: geometry alone says CARRY
+    m.key_down("a", t)
+    assert [s.action for s in m.last_chain.segments][0] == "KICK"
+    assert m.possession == "away"             # the kick handed it over
+    assert m.events[0]["start_reason"] == "kickoff"
+
+
+def test_a_score_arms_the_same_treatment_for_the_restart():
+    m = _match()
+    m.pending_start_reason = "scrum"
+    m.clock.start(t=100.0)
+    t = _trace(m, 20, 34, 100.0, 3.0)
+    m.key_down("t", t)                        # ENG score
+    m.key_down("a", t + 0.01)
+    assert m.pending_start_reason == "restart"
+    at = m.mouse_down(LEFT + 30 * PX, MID_Y, t + 1)
+    assert at == halfway_mark(m.cal)
+
+
+def test_scrum_tap_ends_the_play_and_feeds_the_other_team():
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 20, 32, 100.0, 3.0)
     m.key_down("s", t)                      # knock-on by the team carrying
@@ -109,7 +223,7 @@ def test_scrum_tap_ends_the_play_and_feeds_the_other_team():
 
 
 def test_penalty_tap_awards_against_the_team_in_possession():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     m.key_down("f", 160.0)
     assert m.pending_start_reason == "penalty"
@@ -118,14 +232,14 @@ def test_penalty_tap_awards_against_the_team_in_possession():
 
 
 def test_penalty_arms_a_kick_to_touch_by_default():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     m.key_down("f", 160.0)
     assert m.armed_next_action == "kick_to_touch"
 
 
 def test_choosing_tap_and_go_disarms_the_kick():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     m.key_down("f", 160.0)
     m.choose_penalty_option("tap_and_go")
@@ -134,7 +248,7 @@ def test_choosing_tap_and_go_disarms_the_kick():
 
 
 def test_penalty_kicked_to_touch_keeps_the_ball_and_the_ground():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     m.key_down("f", 160.0)                  # penalty to WAL (away, attacks -x)
     assert m.possession == "away"
@@ -146,7 +260,7 @@ def test_penalty_kicked_to_touch_keeps_the_ball_and_the_ground():
 
 
 def test_arming_is_one_shot():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     m.key_down("f", 160.0)
     t = _trace(m, 75, 40, 161.0, 1.0, y1=TOUCH_Y)
@@ -155,26 +269,28 @@ def test_arming_is_one_shot():
 
 
 def test_the_pending_reason_lands_on_the_next_chain_then_clears():
-    m = MatchState("ENG", "WAL")
+    m = _match()
+    m.pending_start_reason = "scrum"
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
-    m.key_down("a", t)                      # chain 1 exported as the kickoff
-    assert m.events[0]["start_reason"] == "kickoff"
+    m.key_down("a", t)                      # chain 1 exported off that scrum
+    assert m.events[0]["start_reason"] == "scrum"
     assert m.pending_start_reason == "turnover_open"
 
 
 def test_undo_restores_the_pending_origin():
-    m = MatchState("ENG", "WAL")
+    m = _match()
+    m.pending_start_reason = "scrum"
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
     m.key_down("a", t)
     m.undo_last()
-    assert m.pending_start_reason == "kickoff"
+    assert m.pending_start_reason == "scrum"
     assert m.possession == "home"
 
 
 def test_clicking_a_segment_cycles_its_action_and_re_commits():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
     m.key_down("a", t)
@@ -191,7 +307,7 @@ def test_reclassifying_via_a_real_click_does_not_duplicate_events():
     # the click that re-classifies is itself a mouse_down/up, which overwrites
     # the undo snapshot before the handler runs — rewinding to THAT leaves the
     # committed chain in place and appends a second copy
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
     m.key_down("a", t)
@@ -203,7 +319,7 @@ def test_reclassifying_via_a_real_click_does_not_duplicate_events():
 
 
 def test_a_score_survives_reclassifying_through_a_click():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 80, 99, 100.0, 3.0)
     m.key_down("t", t)                    # try mid-chain
@@ -216,14 +332,14 @@ def test_a_score_survives_reclassifying_through_a_click():
 
 
 def test_reclassifying_a_missing_segment_is_a_noop():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.reclassify_segment(0)
     assert m.events == []
 
 
 # --- every indicator is a switch -------------------------------------------
 def test_the_chip_flips_the_team():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
     m.key_down("a", t)
@@ -234,10 +350,33 @@ def test_the_chip_flips_the_team():
     assert m.last_origin.reason == "turnover_open"   # type never changes
 
 
+def test_the_header_tag_flips_possession():
+    m = _match()
+    m.clock.start(t=100.0)
+    t = _trace(m, 20, 34, 100.0, 3.0)
+    m.key_down("a", t)
+    before = m.possession
+    m.flip_possession()                     # the header possession tag is a button
+    assert m.possession == _other(before)
+    assert m.last_origin.team == m.possession        # origin kept in step
+    m.flip_possession()                     # and back
+    assert m.possession == before
+    assert m.last_origin.team == before
+
+
+def test_flip_possession_works_before_any_origin():
+    m = _match()                            # kickoff, nothing traced yet
+    before = m.possession
+    assert m.last_origin is None
+    m.flip_possession()                     # a mis-set kickoff team, one click to fix
+    assert m.possession == _other(before)
+    assert m.last_origin is None            # nothing to keep in step, no crash
+
+
 def test_a_lineout_chip_offers_the_other_mark():
     # kicked from outside the 22, so the tool assumes on the full and marks
     # back at the kick. It bounced, so the operator clicks the mark across.
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 40, 75, 100.0, 1.0, y1=TOUCH_Y)
     m.key_down("a", t)
@@ -249,7 +388,7 @@ def test_a_lineout_chip_offers_the_other_mark():
 
 
 def test_flipping_a_mark_that_has_no_alternative_does_nothing():
-    m = MatchState("ENG", "WAL")
+    m = _match()
     m.clock.start(t=100.0)
     t = _trace(m, 20, 34, 100.0, 3.0)
     m.key_down("a", t)

@@ -60,9 +60,10 @@ def _posts(x):
 def _end_name(x_centre, name):
     """The defending team's name, written down its own in-goal.
 
-    Nothing is ever traced in the in-goal areas, so this is free space — which
-    is the point. An on-pitch direction arrow would sit in the field of play
-    and compete with the trace, and the status bar already carries one.
+    Traces do reach the in-goal — that is what a try looks like — but they
+    cross it rather than live there, so a low-opacity label costs nothing. An
+    on-pitch direction arrow would sit in the field of play and compete with
+    the trace, and the status bar already carries one.
     """
     cy = IMAGE_H / 2
     return (f'<text x="{x_centre}" y="{cy}" fill="white" font-size="20" '

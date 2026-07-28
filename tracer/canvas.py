@@ -53,6 +53,7 @@ class TraceCanvas:
         self._segments: list = []
         self._down_at = None
         self._dragging = False
+        self._suspended = False
         # the WRAPPER carries the sizing, not the image: with max-width on the
         # image instead, it resolves against a wrapper that is itself sized by
         # its content, so the pitch stops shrinking and overflows the window
@@ -65,6 +66,14 @@ class TraceCanvas:
                 events=["mousedown", "mousemove", "mouseup"],
                 cross=True,
             ).style("width:100%")  # size= sets only aspect-ratio, not CSS width
+            # The image edge IS the touchline, so tracing a ball out of play
+            # takes the cursor off the element — and an uncaptured mouseup
+            # lands on the document, never here, leaving the chain unfinished
+            # and the line white forever. Capture pins both to the image;
+            # offsetX/offsetY then run past the edge, which is what makes a
+            # real crossing (rather than mere proximity) visible at all.
+            self.image.on("pointerdown",
+                          js_handler="(e) => e.target.setPointerCapture?.(e.pointerId)")
             # chips sit above the image. The layer ignores pointer events so
             # drags still reach the canvas; each chip re-enables its own.
             self.chip_layer = ui.element("div").classes(
@@ -73,30 +82,48 @@ class TraceCanvas:
     def _mouse(self, e):
         t = time.monotonic()
         if e.type == "mousedown":
-            self._live = [(e.image_x, e.image_y)]
-            self._down_at = (e.image_x, e.image_y)
-            self._dragging = False
-            self._on_down(e.image_x, e.image_y, t)
+            self._handle_down(e, t)
+        elif self._suspended:
+            # the chain already committed (ball out of play, or an A tap
+            # mid-drag) but the button is still down: keep the classified
+            # drawing rather than painting a stray white tail over it
+            return
         elif e.type == "mousemove" and e.buttons:
-            self._live.append((e.image_x, e.image_y))
-            self._on_move(e.image_x, e.image_y, t)
-            if not self._dragging and self._moved_far(e.image_x, e.image_y):
-                # only a real drag replaces the last drawing — a click has to
-                # leave it on screen, since the click is aimed AT it
-                self._dragging = True
-                self._overlay, self._segments = "", []
-            if len(self._live) % 3 == 0:  # ponytail: redraw every 3rd point; virtual-canvas diffing if it lags
-                self._redraw()
+            self._handle_move(e, t)
         elif e.type == "mouseup":
-            if self._dragging:
-                self._on_up(t)
-            else:
-                # a click is not the end of a trace. Routing it through on_up
-                # would run end_chain, which clears last_chain on a rejected
-                # sub-threshold movement (fixtures.py reads that None as "this
-                # trace was rejected") — and re-classifying needs that chain.
-                self._click(e.image_x, e.image_y)
-            self._down_at = None
+            self._handle_up(e, t)
+
+    def _handle_down(self, e, t):
+        # the handler may move the start (a restart is taken from the centre
+        # spot); draw from where it actually recorded, so a press off the mark
+        # shows as the leg it will be recorded as
+        start = self._on_down(e.image_x, e.image_y, t) or (e.image_x, e.image_y)
+        self._live = [start]
+        self._down_at = (e.image_x, e.image_y)
+        self._dragging = False
+        self._suspended = False
+
+    def _handle_move(self, e, t):
+        at = self._on_move(e.image_x, e.image_y, t) or (e.image_x, e.image_y)
+        self._live.append(at)
+        if not self._dragging and self._moved_far(e.image_x, e.image_y):
+            # only a real drag replaces the last drawing — a click has to
+            # leave it on screen, since the click is aimed AT it
+            self._dragging = True
+            self._overlay, self._segments = "", []
+        if len(self._live) % 3 == 0:  # ponytail: redraw every 3rd point; virtual-canvas diffing if it lags
+            self._redraw()
+
+    def _handle_up(self, e, t):
+        if self._dragging:
+            self._on_up(t)
+        else:
+            # a click is not the end of a trace. Routing it through on_up would
+            # run end_chain, which clears last_chain on a rejected sub-threshold
+            # movement (fixtures.py reads that None as "this trace was
+            # rejected") — and re-classifying needs that chain.
+            self._click(e.image_x, e.image_y)
+        self._down_at = None
 
     def _moved_far(self, x, y) -> bool:
         dx, dy = x - self._down_at[0], y - self._down_at[1]
@@ -120,6 +147,7 @@ class TraceCanvas:
     def render_segments(self, segments):
         """Replace the raw live line with the classified, color-coded result."""
         self._segments = list(segments)
+        self._suspended = True
         parts = []
         for seg in segments:
             color, dash = segment_style(seg)

@@ -1,0 +1,143 @@
+<mxfile host="65bd71144e">
+    <diagram id="c4-container" name="System composition">
+        <mxGraphModel dx="1452" dy="951" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1230" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Phase Trace — system composition" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="18" width="1000" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Blue = code · Yellow = files on disk · Green = the sport-agnostic library. Everything below band 4 is inherited from the upstream football project and knows nothing about rugby, the tracer, or a pitch." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="50" width="1560" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="z1" value="1 · CAPTURE — tracer/," style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="100" width="1620" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="z2" value="2 · ARTIFACTS ON DISK" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="360" width="1620" height="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="z3" value="3 · CONSUMERS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="610" width="1620" height="265" as="geometry"/>
+                </mxCell>
+                <mxCell id="z4" value="4 · SPORT-AGNOSTIC MOMENTUM CORE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="915" width="1620" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor" value="Analyst" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalLabelPosition=bottom;verticalAlign=top;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="155" width="60" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_ui" value="&lt;b&gt;app.py · canvas.py · chips.py&lt;/b&gt;&#xa;NiceGUI shell. Pointer path and key taps in,&#xa;colour-coded redraw and correction chips out." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="150" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_state" value="&lt;b&gt;match_state.py&lt;/b&gt;&#xa;MatchState: clock, possession, chain&#xa;lifecycle, snapping, undo, tap dispatch.&#xa;Pure — imports no UI." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="150" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="t_reco" target="t_events">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_reco" value="&lt;b&gt;segmentation.py + features.py&lt;/b&gt;&#xa;Geometry only: one drag →&#xa;CARRY / PASS / KICK segments&#xa;+ a confidence margin." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="150" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_events" value="&lt;b&gt;events.py + geometry.py&lt;/b&gt;&#xa;Team attribution, rugby-law origin&#xa;inference, pixel ↔ metre calibration." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="150" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="t_out" value="&lt;b&gt;export.py · raw_export.py · autosave.py&lt;/b&gt;&#xa;The three writers. export.py refuses to write&#xa;until validate.py dry-runs the real pipeline." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="150" width="280" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="a_session" value="&lt;b&gt;tracer/sessions/&amp;lt;home&amp;gt;_v_&amp;lt;away&amp;gt;.json&lt;/b&gt;&#xa;━━━━━━━━━━━&#xa;teams · colours · clock_seconds&#xa;events[] · actions[]&#xa;written atomically (temp + os.replace)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=11;size=16;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="400" width="280" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="a_events" value="&lt;b&gt;events JSON&lt;/b&gt; (CustomJSONSource shape)&#xa;━━━━━━━━━━━&#xa;{ teams, title, footer, events[] }&#xa;phase_sequence rows + try / conversion /&#xa;penalty_kick / drop_goal / card / turnover&#xa;&#xa;THE MOMENTUM SHAPE — nothing else reads it" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=11;size=16;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="400" width="340" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="a_raw" value="&lt;b&gt;exports/&amp;lt;HOME&amp;gt;_v_&amp;lt;AWAY&amp;gt;/&lt;/b&gt;&#xa;━━━━━━━━━━━&#xa;match.json — self-contained source of truth (meta + actions + summary)&#xa;actions.csv — one row per carry / pass / kick and per discrete event&#xa;players.csv — per jersey totals        team.csv — per-team scalars&#xa;positions.csv — one row per located thing, for spreadsheet heatmaps&#xa;THE ANALYSIS SHAPE — every field optional, blank where nothing was tagged" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=11;size=16;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="400" width="580" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="c_resume" value="&lt;b&gt;setup.py — resume offer&lt;/b&gt;&#xa;MatchState.from_dict() rehydrates&#xa;with the clock paused. A crash costs&#xa;at most the one in-progress trace." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="650" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c_mom" value="&lt;b&gt;momentum.py --sport rugby | football&lt;/b&gt;&#xa;The CLI that drives the library below&#xa;and writes the broadcast-style PNG." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="650" width="340" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c_report" value="&lt;b&gt;report/index.html — no-build viewer&lt;/b&gt;&#xa;Open the file, pick the export folder. ingest.js reads match.json first and falls back to the CSVs.&#xa;Tabs: Pitch map · Heatmap · Team · Players · Momentum*&#xa;&#xa;* the viewer&#39;s momentum is REBUILT client-side (report/momentum.js): phases are regrouped from consecutive same-team&#xa;actions and origin_factor is pinned to 1.0, because start_reason is not in the raw export. It approximates momentum.py, it does not reproduce it." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=12;verticalAlign=top;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="650" width="580" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_source" value="&lt;b&gt;sources/&lt;/b&gt;&#xa;BaseDataSource&#xa;CustomJSONSource.parse()&#xa;knows one provider&#39;s file format" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="965" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_trans" value="&lt;b&gt;translators/&lt;/b&gt;&#xa;BaseSport.translate() + ChartProfile&#xa;rugby: _territory_weight() in code&#xa;football: flat JSON lookup table" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="965" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_schema" value="&lt;b&gt;core/schema.py&lt;/b&gt;&#xa;StandardEvent(team, t, weight,&#xa;category, label, marker)&#xa;the only shape the math ever sees" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="965" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_engine" value="&lt;b&gt;core/engine.py&lt;/b&gt;&#xa;MomentumEngine.compute()&#xa;Σ wₑ · e^(−λ(t−tₑ)) → Gaussian&#xa;smooth → net home−away, normalised" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="965" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_chart" value="&lt;b&gt;core/chart.py&lt;/b&gt;&#xa;render() — mirrored area chart,&#xa;axis ticks and half-time marker&#xa;taken from the sport&#39;s ChartProfile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1370" y="965" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="k_note" value="Sport and DataSource are independent axes: any BaseSport composes with any BaseDataSource, so adding a provider or a sport is one class, not one class per pair.&#xa;tracer/validate.py runs this exact chain as a dry run before any export is written — nothing can KeyError downstream that did not already fail there." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="1105" width="1560" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_actor" value="traces, taps" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" parent="1" source="actor" target="t_ui" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ui_state" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="t_ui" target="t_state" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_state_reco" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="t_state" target="t_reco" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_reco_ev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="t_reco" target="t_events" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ev_out" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="t_events" target="t_out" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_out_events" value="Validate + export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" parent="1" source="t_out" target="a_events" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1470" y="327"/>
+                            <mxPoint x="790" y="327"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_out_raw" value="Export data (CSV)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" parent="1" source="t_out" target="a_raw" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_state_sess" value="every commit + 5 s" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#666666;fontSize=11;" parent="1" source="t_state" target="a_session" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sess_res" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#666666;" parent="1" source="a_session" target="c_resume" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ev_mom" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="a_events" target="c_mom" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_raw_rep" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="a_raw" target="c_report" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_mom_core" value="parse → translate → compute → render" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" parent="1" source="c_mom" target="k_source" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="790" y="808"/>
+                            <mxPoint x="230" y="808"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_k1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="k_source" target="k_trans" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_k2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="k_trans" target="k_schema" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_k3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="k_schema" target="k_engine" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_k4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" parent="1" source="k_engine" target="k_chart" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

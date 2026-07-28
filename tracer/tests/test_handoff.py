@@ -6,6 +6,7 @@ end_chain path so the reason cue and score override are exercised too.
 
 from tracer import config
 from tracer.events import compute_score, infer_next_possession
+from tracer import fixtures
 from tracer.match_state import MatchState
 
 PX = config.PX_PER_M
@@ -13,10 +14,12 @@ LEFT = config.IN_GOAL_DEPTH_M * PX
 
 
 # --- pure inference table --------------------------------------------------
-def test_score_scoring_team_receives_restart():
-    # scored_team wins even if a drop-goal kick flipped possession in-chain
-    assert infer_next_possession("home", "away", "home") == "home"
-    assert infer_next_possession("away", "home", "away") == "away"
+def test_score_hands_the_ball_to_the_conceding_team_to_restart():
+    # possession means who HAS the ball, and the side that conceded takes the
+    # drop kick — scored_team decides that even when the scoring kick already
+    # flipped possession in-chain
+    assert infer_next_possession("home", "away", "home") == "away"
+    assert infer_next_possession("away", "home", "away") == "home"
 
 
 def test_kick_or_interception_uses_in_chain_flip():
@@ -39,7 +42,7 @@ def _trace(m, x0_m, x1_m, t0, dur, n=60):
 
 
 def test_carry_end_hands_ball_over_as_turnover():
-    m = MatchState("ENG", "WAL")
+    m = fixtures.open_play_match(home="ENG", away="WAL")   # a carry in open play
     m.clock.start(t=100.0)
     t = _trace(m, 10, 22, 100.0, 3.0)      # ~12m carry, tackled
     m.key_down("a", t)
@@ -48,7 +51,7 @@ def test_carry_end_hands_ball_over_as_turnover():
 
 
 def test_kick_end_flips_and_reads_as_kick():
-    m = MatchState("ENG", "WAL")
+    m = fixtures.open_play_match(home="ENG", away="WAL")   # a kick from open play
     m.clock.start(t=100.0)
     t = _trace(m, 30, 68, 100.0, 0.6)      # ~38m kick
     m.key_down("a", t)
@@ -56,12 +59,12 @@ def test_kick_end_flips_and_reads_as_kick():
     assert m.last_end_reason == "kick"
 
 
-def test_drop_goal_restart_keeps_ball_with_scorer_and_scores():
+def test_drop_goal_gives_the_restart_to_the_conceding_side_and_scores():
     m = MatchState("ENG", "WAL")
     m.clock.start(t=100.0)
     t = _trace(m, 30, 68, 100.0, 0.6)      # home kicks (would flip to away)
     m.key_down("g", t)                     # ...but it's a drop goal by home
     m.key_down("a", t + 0.01)
-    assert m.possession == "home"          # scoring team receives restart
+    assert m.possession == "away"          # away conceded, so away restarts
     assert m.last_end_reason == "score"
     assert compute_score(m.events, m.team_names) == {"home": 3, "away": 0}

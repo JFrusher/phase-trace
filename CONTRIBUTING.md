@@ -13,7 +13,7 @@ Python 3.11+.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest -q          # 225 tests, ~3 seconds
+python -m pytest -q          # 326 tests, ~4 seconds
 ```
 
 CI runs the same `pytest -q` on every push and pull request, on 3.11. If it's
@@ -36,8 +36,10 @@ silently. `tracer/tests/test_pace_invariance.py` is the fence.
 app in dev mode (`python -m tracer.app 8080 dev`), use *Save last trace*, then
 promote the saved trace into `tracer/tests/traces/` with an `"expect"` block.
 It joins the corpus, `test_corpus.py` picks it up, and `python -m tracer.sweep`
-and `python -m tracer.fit` will tell you what the constants should be. Both
-print and neither writes `config.py`, so the final edit is yours.
+and `python -m tracer.fit` will tell you what the constants should be. A third
+tool, `python -m tracer.calibrate`, is `fit` plus the segment corrections
+operators log live in the app (SQLite, `tracer/feedback/`; see TUNING.md). All
+three print and none writes `config.py`, so the final edit is yours.
 
 A recognizer PR that changes a constant without a corpus case demonstrating
 why won't get merged, not because of process, but because there's no way to

@@ -1,0 +1,456 @@
+<mxfile host="65bd71144e">
+    <diagram id="page1-overview" name="1 · Overview (DFD)">
+        <mxGraphModel dx="1452" dy="951" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="p1_title" value="match-momentum · tracer/ — data flow:  trace input  →  analysis pipeline  →  permanent storage" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="24" width="1200" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_zin" value="TRACE INPUT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=15;fontStyle=1;fontColor=#808080;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="80" width="320" height="760" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_zpipe" value="ANALYSIS PIPELINE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=15;fontStyle=1;fontColor=#808080;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="80" width="760" height="760" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_zstore" value="PERMANENT STORAGE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=15;fontStyle=1;fontColor=#808080;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="80" width="380" height="760" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_analyst" value="Analyst" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;verticalLabelPosition=bottom;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="120" width="70" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_canvas" value="Live Canvas — canvas.py&lt;br&gt;captures pointer path while button held" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="280" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_keys" value="Key taps — keystate.py&lt;br&gt;A/S/F · K/P/R · L · Shift · digits · Z/X · T/N/G…" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="405" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_calib" value="Pitch calibration — geometry.py&lt;br&gt;PitchCalibration: pixels ↔ metres" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="500" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_indata" value="raw capture&lt;br&gt;──────────&lt;br&gt;PathPoint {x, y, t}[]&lt;br&gt;Tap {key, t}[]" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="580" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_seg" value="1 · Segmentation — segmentation.py&lt;br&gt;resample to arc-length · smooth · evidence-score boundaries · split into segments" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="120" width="680" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_cls" value="2 · Classification — features.py&lt;br&gt;spatial features (backward, lateral, straight, dist) · Rubine-style linear score → CARRY / PASS / KICK + confidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="250" width="680" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_evt" value="3 · Chain &amp; events — events.py&lt;br&gt;correlate taps to segments · split chain on kick / interception · build phase_sequence + action rows · infer next possession · compute score" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="390" width="680" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_ms" value="4 · MatchState — match_state.py&lt;br&gt;orchestrator · events[] (momentum log) + actions[] (squad log) · undo / redo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="540" width="680" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_val" value="5 · Validate — validate.py&lt;br&gt;schema gate: errors BLOCK the momentum export write" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="670" width="680" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_export" value="momentum export .json&lt;br&gt;export.py&lt;br&gt;CustomJSONSource viz input" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=bottom;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="120" width="290" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_raw" value="squad analysis&lt;br&gt;raw_export.py&lt;br&gt;actions.csv · players.csv&lt;br&gt;team.csv · match.json" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=bottom;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="270" width="290" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_sess" value="sessions/&lt;fixture&gt;.json&lt;br&gt;autosave.py&lt;br&gt;atomic write · resume-on-launch" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=bottom;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="540" width="290" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1_a_can" value="hold-drag" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" parent="1" source="p1_analyst" target="p1_canvas" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="220" y="220"/>
+                            <mxPoint x="220" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_a_key" value="key taps" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;" parent="1" source="p1_analyst" target="p1_keys" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="80" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_can_seg" value="PathPoint[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_canvas" target="p1_seg" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="340" y="230"/>
+                            <mxPoint x="670" y="230"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_key_evt" value="Tap {key,t}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_keys" target="p1_evt" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1_cal_seg" value="px → m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;" parent="1" source="p1_calib" target="p1_seg" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="390" y="510"/>
+                            <mxPoint x="390" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_cal_evt" value="metres_gained / from_line" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;" parent="1" source="p1_calib" target="p1_evt" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="720" y="520"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_seg_cls" value="Segment[] (geometry only)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_seg" target="p1_cls" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1_cls_evt" value="Segment[] + action + confidence" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_cls" target="p1_evt" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1_evt_ms" value="phase_sequence + action rows" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_evt" target="p1_ms" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="870" y="510"/>
+                            <mxPoint x="870" y="510"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_ms_val" value="events[] + actions[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_ms" target="p1_val" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1_val_exp" value="validated events[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_val" target="p1_export" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1550" y="705"/>
+                            <mxPoint x="1550" y="170"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_ms_raw" value="events[] + actions[] (tolerant dump)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;exitX=0.994;exitY=0.077;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="p1_ms" target="p1_raw" edge="1">
+                    <mxGeometry x="0.4857" y="-10" relative="1" as="geometry">
+                        <mxPoint x="1090" y="540" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="1090" y="546"/>
+                            <mxPoint x="1090" y="520"/>
+                            <mxPoint x="1250" y="520"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_ms_sess" value="autosave (atomic)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p1_ms" target="p1_sess" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1190" y="580"/>
+                            <mxPoint x="1190" y="580"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e1_sess_ms" value="rehydrate on launch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="p1_sess" target="p1_ms" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1230" y="600"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="p1_leg" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#808080;align=left;spacingLeft=8;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="860" width="1000" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_proc" value="process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="900" width="110" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_gate" value="gate / block" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="900" width="110" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_store" value="datastore" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="892" width="110" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_ent" value="external entity" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;verticalLabelPosition=bottom;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="490" y="895" width="34" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_data" value="data (payload)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;size=10;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="900" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_leg_flow" value="── data flow    - - solid vs dashed = primary vs supporting / feedback" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#808080;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="900" width="270" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="page2-pipeline" name="2 · Pipeline internals">
+        <mxGraphModel dx="1452" dy="951" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="p2_title" value="tracer/ analysis pipeline — level-2 detail (one continuous drag → committed logs)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="24" width="1200" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_gcap" value="Capture" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#808080;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="80" width="270" height="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_canvas" value="canvas.py&lt;br&gt;pointer handler → append PathPoint(x, y, t) while held" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="120" width="230" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_keys" value="keystate.py&lt;br&gt;key handler → Tap(key, t) buffer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="230" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_calib" value="geometry.py&lt;br&gt;PitchCalibration — pixels ↔ metres, territory math" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="330" width="230" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_gseg" value="segmentation.py — pace-invariant boundary detection" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#808080;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="80" width="330" height="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_resample" value="_resample&lt;br&gt;uniform arc-length spacing (RESAMPLE_STEP_M) → pace-independent point density" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="120" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_smooth" value="_smooth&lt;br&gt;moving average · keeps true endpoints (exact metres gained)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="230" width="290" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_bcand" value="_boundary_candidates&lt;br&gt;mean velocity before/after each point · angle + speed-ratio evidence score" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="330" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_split" value="accept vs BOUNDARY_ACCEPT · group nearby · split into Segment[] slices" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="440" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_gfeat" value="features.py — classification (positions only)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#808080;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="80" width="300" height="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_feat" value="extract features&lt;br&gt;backward (rect) · lateral (rect, forward-veto) · straight · dist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="120" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_score" value="score()&lt;br&gt;per-class linear score + softmax · CARRY = fixed reference (0)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="230" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_argmax" value="action = argmax&lt;br&gt;CARRY / PASS / KICK&lt;br&gt;confidence = top − second prob" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="340" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_gevt" value="events.py — chain assembly &amp; match flow" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#808080;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="80" width="340" height="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_taps" value="apply_taps&lt;br&gt;correlate taps to nearest boundary — digits · K/P/R · L · Shift" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="120" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_teams" value="assign_teams&lt;br&gt;kick / interception flips possession" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="230" width="300" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_sub" value="split into same-team sub-chains" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="330" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_phase" value="phase_sequences()&lt;br&gt;→ phase_sequence dicts (+ turnover_won) · set_piece_record · penalty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="420" width="300" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_infer" value="infer_next_possession · compute_score (derived, never stored)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="540" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_gms" value="match_state.py — orchestrator &amp; ledger" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#808080;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="1440" y="80" width="340" height="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_endchain" value="end_chain(t)&lt;br&gt;snapshot event/action indices at mouse_down" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="120" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_build" value="build PlayChain → phase_sequences() + chain_to_actions()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="230" width="300" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_append" value="events[].extend · actions[].extend&lt;br&gt;set possession + last_end_reason" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="330" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_commit" value="precommit / commit / undo (chain_seq)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="440" width="300" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_val" value="validate.py — validate_events() → errors[]&lt;br&gt;non-empty = export write blocked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="540" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_stores" value="→ autosave.py · export.py · raw_export.py&lt;br&gt;(permanent storage — see page 1 &amp; 3)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=bottom;" parent="1" vertex="1">
+                    <mxGeometry x="1460" y="660" width="300" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_res_sm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_resample" target="p2_smooth" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_sm_bc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_smooth" target="p2_bcand" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_bc_sp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_bcand" target="p2_split" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_feat_sc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_feat" target="p2_score" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_sc_am" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_score" target="p2_argmax" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_taps_teams" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_taps" target="p2_teams" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_teams_sub" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_teams" target="p2_sub" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_sub_ph" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_sub" target="p2_phase" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_ph_inf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_phase" target="p2_infer" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_ec_bd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_endchain" target="p2_build" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_bd_ap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_build" target="p2_append" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_ap_cm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_append" target="p2_commit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_cm_val" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_commit" target="p2_val" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_val_st" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" parent="1" source="p2_val" target="p2_stores" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_can_res" value="PathPoint[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p2_canvas" target="p2_resample" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_sp_feat" value="Segment[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p2_split" target="p2_feat" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="480"/>
+                            <mxPoint x="700" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2_am_taps" value="classified Segment[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p2_argmax" target="p2_taps" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1050" y="380"/>
+                            <mxPoint x="1050" y="180"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2_key_taps" value="Tap[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;" parent="1" source="p2_keys" target="p2_taps" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="175" y="220"/>
+                            <mxPoint x="1040" y="220"/>
+                            <mxPoint x="1040" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2_cal_bc" value="px → m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;" parent="1" source="p2_calib" target="p2_bcand" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2_cal_ph" value="metres" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;dashed=1;" parent="1" source="p2_calib" target="p2_phase" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="175" y="430"/>
+                            <mxPoint x="1040" y="430"/>
+                            <mxPoint x="1040" y="465"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2_inf_ec" value="phase_sequence + action rows" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=2;" parent="1" source="p2_infer" target="p2_endchain" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1420" y="580"/>
+                            <mxPoint x="1420" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="page3-datamodel" name="3 · Data model (scales)">
+        <mxGraphModel dx="1452" dy="951" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="1600" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="p3_title" value="The same match at every scale — one pointer tick aggregates up into the whole-match files" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="24" width="1100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s1" value="one pointer tick" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="95" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s2" value="~metres of path" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="285" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s3" value="one possession" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="465" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s4" value="one phase / action" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="705" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s5" value="whole match (live)" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="965" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_s6" value="whole match (exports)" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#999999;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="1235" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_point" value="PathPoint&lt;br&gt;──────────&lt;br&gt;x: float&lt;br&gt;y: float&lt;br&gt;t: float  # monotonic s" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="80" width="260" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_tap" value="Tap&lt;br&gt;──────────&lt;br&gt;key: str&lt;br&gt;t: float" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="80" width="260" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod1" value="produced by canvas.py / keystate.py" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6c8ebf;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="120" width="300" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_seg" value="Segment&lt;br&gt;──────────&lt;br&gt;action: CARRY | PASS | KICK&lt;br&gt;points: PathPoint[]&lt;br&gt;team: home | away&lt;br&gt;linebreak: bool&lt;br&gt;players: PlayerTag[]&lt;br&gt;scores: {class: float}&lt;br&gt;confidence: float" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="270" width="320" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod2" value="produced by segmentation.py + features.py&#xa;(one carry / pass / kick leg of the drag)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6c8ebf;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="320" width="320" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_chain" value="PlayChain&lt;br&gt;──────────&lt;br&gt;team: home | away&lt;br&gt;segments: Segment[]&lt;br&gt;# one possession = one unbroken drag" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="450" width="320" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod3" value="assembled by match_state.py end_chain()" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6c8ebf;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="500" width="320" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_phase" value="phase_sequence (momentum log)&lt;br&gt;──────────&lt;br&gt;type: &quot;phase_sequence&quot;&lt;br&gt;team, minute&lt;br&gt;metres_gained&lt;br&gt;end_metres_from_line&lt;br&gt;start_metres_from_line&lt;br&gt;start_reason, linebreaks&lt;br&gt;players?" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="620" width="320" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_action" value="action row (squad log)&lt;br&gt;──────────&lt;br&gt;type: carry|pass|kick|…&lt;br&gt;jersey, metres, minute&lt;br&gt;+ discretes:&lt;br&gt;try · conversion · penalty_won&lt;br&gt;set_piece · card · turnover_won" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontFamily=Courier New;fontSize=11;size=14;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="620" width="320" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod4" value="built by events.py · appended to the two match_state ledgers" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6c8ebf;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="700" width="320" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_sess" value="sessions/&lt;fixture&gt;.json&lt;br&gt;──────────&lt;br&gt;teams, team_colors&lt;br&gt;possession, attack_dir_home&lt;br&gt;clock_seconds&lt;br&gt;events: [ phase_sequence, try, … ]" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=middle;spacingLeft=12;fontFamily=Courier New;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="875" width="320" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod5" value="autosave.py — atomic, resume-on-launch&#xa;(the live working copy of the whole match)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#82b366;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="960" width="340" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_export" value="momentum export .json&lt;br&gt;──────────&lt;br&gt;teams, title, footer&lt;br&gt;events: [...] sorted by minute&lt;br&gt;# CustomJSONSource viz input&lt;br&gt;# validate.py gate must pass" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=middle;spacingLeft=12;fontFamily=Courier New;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="1160" width="330" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_squad" value="squad analysis&lt;br&gt;──────────&lt;br&gt;actions.csv  players.csv&lt;br&gt;team.csv&lt;br&gt;match.json (meta + streams)&lt;br&gt;# raw_export.py, tolerant of gaps" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=middle;spacingLeft=12;fontFamily=Courier New;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="1160" width="330" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3_prod6" value="export.py (validated)  ·  raw_export.py (tolerant dump)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#82b366;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="940" y="1240" width="330" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_pt_seg" value="N ticks sliced per segment" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" parent="1" source="p3_point" target="p3_seg" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_tap_seg" value="taps tag segments" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" parent="1" source="p3_tap" target="p3_seg" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_seg_chain" value="segments per possession" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" parent="1" source="p3_seg" target="p3_chain" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_chain_ph" value="sub-chains → momentum events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;exitX=0.4;exitY=1;exitDx=0;exitDy=0;" parent="1" source="p3_chain" target="p3_phase" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_chain_act" value="sub-chains → per-action rows" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;exitX=0.7;exitY=1;exitDx=0;exitDy=0;" parent="1" source="p3_chain" target="p3_action" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_ph_sess" value="appended to live events[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" parent="1" source="p3_phase" target="p3_sess" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_sess_exp" value="validated &amp; reshaped" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" parent="1" source="p3_sess" target="p3_export" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="g3_act_squad" value="flattened per action + summaries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" target="p3_squad" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="735" y="820" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="735" y="820"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -2,12 +2,10 @@
 
 from tracer import fixtures
 from tracer.devpanel import format_report
-from tracer.match_state import MatchState
 
 
 def _run(name):
-    m = MatchState("H", "A")
-    m.clock.start(t=0.0)
+    m = fixtures.open_play_match()
     fixtures.inject(m, fixtures.SCENARIOS[name])
     return m
 

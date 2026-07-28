@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Match Report — tracer export viewer</title>
+  <link rel="stylesheet" href="report.css">
+</head>
+<body>
+  <main class="app">
+    <h1 class="app-title">Match Report</h1>
+
+    <section id="dropzone" class="dropzone">
+      <p class="dz-lead">Drop an exported match folder here, or</p>
+      <div class="dz-buttons">
+        <label class="btn">Choose folder
+          <input id="folderInput" type="file" webkitdirectory directory multiple hidden>
+        </label>
+        <label class="btn ghost">Choose files
+          <input id="fileInput" type="file" multiple hidden>
+        </label>
+      </div>
+      <p class="dz-hint">Point it at an <code>exports/&lt;HOME&gt;_v_&lt;AWAY&gt;/</code> folder
+        (contains <code>match.json</code> + CSVs). A sample sits in <code>report/sample/</code>.</p>
+    </section>
+
+    <div id="error" class="error hidden"></div>
+    <div id="report"></div>
+    <button id="reset" class="btn ghost reset hidden">Load another export</button>
+  </main>
+
+  <script src="pitch.js"></script>
+  <script src="momentum.js"></script>
+  <script src="heatmap.js"></script>
+  <script src="ingest.js"></script>
+  <script src="views.js"></script>
+  <script>
+    (function () {
+      var dropzone = document.getElementById("dropzone");
+      var errorBox = document.getElementById("error");
+      var reportEl = document.getElementById("report");
+      var resetBtn = document.getElementById("reset");
+
+      function showError(msg) {
+        errorBox.textContent = "Couldn't read this export: " + msg;
+        errorBox.classList.remove("hidden");
+      }
+      function load(fileList) {
+        errorBox.classList.add("hidden");
+        MR.ingest.run(fileList).then(function (model) {
+          MR.views.render(model, reportEl);
+          dropzone.classList.add("hidden");
+          resetBtn.classList.remove("hidden");
+        }).catch(function (e) { showError(e.message || String(e)); });
+      }
+
+      document.getElementById("folderInput").addEventListener("change", function (e) { if (e.target.files.length) load(e.target.files); });
+      document.getElementById("fileInput").addEventListener("change", function (e) { if (e.target.files.length) load(e.target.files); });
+      resetBtn.addEventListener("click", function () {
+        reportEl.innerHTML = ""; errorBox.classList.add("hidden");
+        resetBtn.classList.add("hidden"); dropzone.classList.remove("hidden");
+      });
+
+      // drag-drop, including a dropped folder (traverse webkitGetAsEntry)
+      ["dragover", "dragenter"].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add("over"); });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove("over"); });
+      });
+      dropzone.addEventListener("drop", function (e) {
+        var items = e.dataTransfer.items;
+        if (items && items.length && items[0].webkitGetAsEntry) {
+          var entries = [];
+          for (var i = 0; i < items.length; i++) { var en = items[i].webkitGetAsEntry(); if (en) entries.push(en); }
+          collectEntries(entries).then(function (files) {
+            if (files.length) load(files); else showError("no readable files in the drop.");
+          });
+        } else if (e.dataTransfer.files.length) {
+          load(e.dataTransfer.files);
+        }
+      });
+
+      // Recursively read File objects from dropped entries. Sets webkitRelativePath
+      // via file.path fallback so folder-name side detection still works.
+      function collectEntries(entries) {
+        var out = [];
+        function walk(entry) {
+          return new Promise(function (resolve) {
+            if (entry.isFile) {
+              entry.file(function (f) { try { f.path = entry.fullPath.replace(/^\//, ""); } catch (_) {} out.push(f); resolve(); });
+            } else if (entry.isDirectory) {
+              var reader = entry.createReader();
+              reader.readEntries(function (children) {
+                Promise.all(children.map(walk)).then(resolve);
+              });
+            } else resolve();
+          });
+        }
+        return Promise.all(entries.map(walk)).then(function () { return out; });
+      }
+    })();
+  </script>
+</body>
+</html>

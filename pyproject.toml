@@ -1,7 +1,7 @@
 [project]
-name = "match-momentum"
+name = "phase-trace"
 version = "0.1.0"
-description = "Sport-agnostic match momentum charts + live tracing tools"
+description = "Trace rugby possessions with the mouse, get an event stream and a momentum chart"
 requires-python = ">=3.11"
 dependencies = [
     "numpy",

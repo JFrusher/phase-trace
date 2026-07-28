@@ -2,7 +2,7 @@
 
 **Working document. Delete this file in the final commit before opening the PR.**
 
-Target: one PR into `origin/master` (Jfrusher/match-momentum), read by a public
+Target: one PR into `origin/master` (Jfrusher/phase-trace), read by a public
 audience as a portfolio piece. Branch `feature/modular-input-framework` is
 currently 10 commits ahead of `master`, clean fast-forward, 154 tests green.
 

@@ -36,6 +36,28 @@ def actions(segments):
     return [s.action for s in segments]
 
 
+def test_should_flip_gates_kick_on_confidence():
+    sf = segmentation._should_flip
+    assert sf("KICK", 0.5, forced=False) is True
+    assert sf("KICK", 0.01, forced=False) is False   # near-tie kick: frame held
+    assert sf("KICK", 0.01, forced=True) is True      # forced (kickoff) always
+    assert sf("KICK", None, forced=False) is True     # unset -> flips (legacy)
+    assert sf("CARRY", 0.9, forced=False) is False
+
+
+def test_reclassify_downstream_reframes_after_toggling_kick_off():
+    p = []
+    leg(p, 30, 35, 60, 35, 0.5)     # KICK, flips the frame
+    leg(p, 60, 35, 50, 34, 2.5)     # -10x: forward for the receiver -> CARRY
+    segs = segment_path(p, 1)
+    assert actions(segs) == ["KICK", "CARRY"]
+    # operator: that wasn't a kick. Toggle it off and re-derive downstream.
+    segs[0].action = "CARRY"
+    segs[0].flips_possession = False
+    segmentation.reclassify_downstream(segs, base_dir=1, start_index=0)
+    assert segs[1].action == "PASS"  # no flip now: -10x reads backward
+
+
 def test_carry_pass_carry_kick():
     p = []
     leg(p, 10, 35, 20, 35, 2.5)          # carry: 10m forward at 4 m/s

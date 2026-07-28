@@ -1,0 +1,145 @@
+<mxfile host="phase-trace-docs">
+    <diagram id="law-inference" name="How the next possession begins">
+        <mxGraphModel dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1310" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="How the next possession begins — events.infer_origin()" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="14" width="900" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="sub" value="Tested in order, first match wins. Almost all of it is read off the traced line itself; the two things a line genuinely cannot show — a scrum and a penalty — are taps, and the one thing it cannot show either way, whether the ball was grounded, is a chooser." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="44" width="1600" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="entry" value="a chain has just committed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=40;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="100" width="300" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" value="a score was recorded&#xa;during this chain?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="200" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d2" value="did the traced line&#xa;cross a touchline?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="340" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d6" value="past a dead-ball line,&#xa;or the in-goal chooser says drop-out?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="480" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d7" value="in-goal chooser&#xa;says held up?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="620" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d8" value="was the last segment&#xa;a KICK?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="760" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d9" value="was any PASS&#xa;intercepted?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="900" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_restart" value="&lt;b&gt;restart&lt;/b&gt;  ·  centre spot&#xa;The side that CONCEDED takes the drop kick,&#xa;so they hold the ball. Possession always means&#xa;who has it, never who is about to receive it —&#xa;the restart kick itself does the handing over." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="180" width="270" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_dropout" value="&lt;b&gt;drop_out_22&lt;/b&gt;&#xa;The defending side, from their own 22 —&#xa;whoever put the ball there." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="485" width="270" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_scrum5" value="&lt;b&gt;scrum&lt;/b&gt;  ·  5 m mark&#xa;Attacking side. Only reachable&#xa;through the in-goal chooser." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="625" width="270" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_kickret" value="&lt;b&gt;kick_return&lt;/b&gt;&#xa;The receiving side. No mark — the ball is&#xa;in open play, so the next press is free-hand." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="765" width="270" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_intercept" value="&lt;b&gt;interception&lt;/b&gt;&#xa;Driven by a Shift held over the pass.&#xa;Also logs turnover_won for the gaining side." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="905" width="270" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_turnover" value="&lt;b&gt;turnover_open&lt;/b&gt;  ·  mark = where the trace ended&#xa;The fall-through: possession assumed lost at the breakdown — the coarse knock-on / jackal / held-in-the-tackle case.&#xa;Tap Z or X if it was actually retained (a penalty played on)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="1040" width="500" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="zlo" value="THE BALL IS IN TOUCH — who throws in, and where the line-out forms" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="300" width="940" height="560" as="geometry"/>
+                </mxCell>
+                <mxCell id="d3" value="was it KICKED out,&#xa;or carried out?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="760" y="350" width="260" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d4" value="penalty option armed&#xa;as kick_to_touch?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="760" y="490" width="260" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="d5" value="kicked from inside&#xa;the kicker's own 22?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="760" y="630" width="260" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_lo_carry" value="&lt;b&gt;lineout&lt;/b&gt;  ·  mark = where the carrier crossed&#xa;Throw to the side that did not take it out. The kick-to-touch law&#xa;has nothing to say about a ball that was carried over." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1080" y="355" width="540" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_lo_pen" value="&lt;b&gt;lineout&lt;/b&gt;  ·  the throw STAYS with the kicking team&#xa;A penalty kicked to touch keeps both the ground and the throw, unlike&#xa;an open-play kick — which is exactly why the armed case is tested before&#xa;the on-the-full law below and bypasses it." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1080" y="490" width="540" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_lo_gain" value="&lt;b&gt;lineout at the exit point&lt;/b&gt; — the ground is gained&#xa;From inside your own 22 the ball may be kicked directly into touch." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1080" y="620" width="540" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="o_lo_full" value="&lt;b&gt;lineout back at the kick&lt;/b&gt; — assumed out on the full&#xa;A top-down trace cannot see a bounce, so the stricter reading is the&#xa;default. The ⇄ button on the chip moves the mark forward to the exit&#xa;point when it did bounce first — the alt_mark on the same ChainOrigin." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+                    <mxGeometry x="1080" y="710" width="540" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="tapped" value="&lt;b&gt;S and F bypass this tree entirely&lt;/b&gt;&#xa;A knock-on looks exactly like a tackle, and a penalty looks like nothing at all, so the two set pieces a line cannot show are single taps.&#xa;Both award against whoever was carrying — right most of the time, and the chip's team badge fixes the rest in one click.&#xa;An F tap also logs a penalty_won event (with conceded_by, so a coach can map their own discipline) and arms the option chooser:&#xa;to touch · at goal · tap · scrum, pre-selected on kick_to_touch. To-touch and at-goal both force the next stroke to be a KICK." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="900" width="860" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="&lt;b&gt;Reading the colours&lt;/b&gt;&#xa;green — settled by geometry; the type is never editable, only the team is&#xa;orange — needs an operator tap or a chooser pick&#xa;purple — a test infer_origin() performs, in this order&#xa;&#xa;Every chooser is pre-selected on the guess and nothing blocks: ignoring it accepts the guess." style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;fontSize=11;fontColor=#666666;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="1060" width="860" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="footer" value="&lt;b&gt;Every leaf produces one ChainOrigin(reason, team, mark, alt_mark)&lt;/b&gt; — it sets MatchState.possession and pending_start_reason, draws the chip you correct, and becomes the mark the next press snaps onto.&#xa;The reason also scales that possession's momentum weight, through origin_factor in translators/rugby_weights.json:  interception 1.30 · penalty 1.25 · lineout 1.15 · turnover_open 1.10 · scrum 1.00 · kick_return 0.95 · kickoff and restart 0.90 · drop_out_22 0.85.&#xa;Those nine numbers are judgement calls with no reference data behind them yet — the tracer says what happened, the translator says what it is worth, and only the translator side is guesswork." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="1210" width="1620" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_entry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="entry" target="d1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d1y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d1" target="o_restart">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d1n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d1" target="d2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d2y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d2" target="d3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d2n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d2" target="d6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d6y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d6" target="o_dropout">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d6n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d6" target="d7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d7y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d7" target="o_scrum5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d7n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d7" target="d8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d8y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d8" target="o_kickret">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d8n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d8" target="d9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d9y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d9" target="o_intercept">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d9n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d9" target="o_turnover">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d3n" value="carried out" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d3" target="o_lo_carry">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d3y" value="kicked" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d3" target="d4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d4y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d4" target="o_lo_pen">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d4n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d4" target="d5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d5y" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d5" target="o_lo_gain">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_d5n" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="d5" target="o_lo_full">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -1,0 +1,417 @@
+{
+ "meta": {
+  "teams": {
+   "home": "HOME",
+   "away": "AWAY"
+  },
+  "date": "2026-05-18",
+  "competition": "Demo Series"
+ },
+ "actions": [
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 0.1,
+   "metres_gained": 15.0,
+   "end_metres_from_line": 55.0,
+   "start_x_m": 30.0,
+   "start_y_m": 40.0,
+   "end_x_m": 45.0,
+   "end_y_m": 38.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 0.4,
+   "metres_gained": 13.0,
+   "end_metres_from_line": 42.0,
+   "start_x_m": 45.0,
+   "start_y_m": 38.0,
+   "end_x_m": 58.0,
+   "end_y_m": 44.0,
+   "attack_dir": 1,
+   "linebreak": true
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 0.8,
+   "metres_gained": 14.0,
+   "end_metres_from_line": 28.0,
+   "start_x_m": 58.0,
+   "start_y_m": 44.0,
+   "end_x_m": 72.0,
+   "end_y_m": 30.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 1.0,
+   "metres_gained": 16.0,
+   "end_metres_from_line": 12.0,
+   "start_x_m": 72.0,
+   "start_y_m": 30.0,
+   "end_x_m": 88.0,
+   "end_y_m": 34.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "try",
+   "team": "HOME",
+   "minute": 1.1,
+   "label": "HOME try 1'",
+   "x_m": 82.9,
+   "y_m": 32.7
+  },
+  {
+   "type": "pass",
+   "team": "AWAY",
+   "minute": 1.7,
+   "metres_gained": 15.0,
+   "end_metres_from_line": 40.0,
+   "start_x_m": 55.0,
+   "start_y_m": 20.0,
+   "end_x_m": 40.0,
+   "end_y_m": 18.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "pass",
+   "team": "HOME",
+   "minute": 2.0,
+   "metres_gained": 0.0,
+   "end_metres_from_line": 74.0,
+   "start_x_m": 40.0,
+   "start_y_m": 18.0,
+   "end_x_m": 26.0,
+   "end_y_m": 30.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "turnover_won",
+   "team": "HOME",
+   "minute": 2.0,
+   "x_m": 30.5,
+   "y_m": 26.1
+  },
+  {
+   "type": "carry",
+   "team": "AWAY",
+   "minute": 2.4,
+   "metres_gained": 18.0,
+   "end_metres_from_line": 12.0,
+   "start_x_m": 30.0,
+   "start_y_m": 30.0,
+   "end_x_m": 12.0,
+   "end_y_m": 40.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "try",
+   "team": "AWAY",
+   "minute": 2.4,
+   "label": "AWAY try 2'",
+   "x_m": 17.8,
+   "y_m": 36.8
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 3.1,
+   "metres_gained": 10.2,
+   "end_metres_from_line": 64.8,
+   "start_x_m": 25.0,
+   "start_y_m": 55.0,
+   "end_x_m": 35.2,
+   "end_y_m": 53.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "penalty_won",
+   "team": "AWAY",
+   "conceded_by": "HOME",
+   "minute": 3.1,
+   "x_m": 35.2,
+   "y_m": 53.0,
+   "reason": "offside"
+  },
+  {
+   "type": "error",
+   "kind": "knock_on",
+   "team": "HOME",
+   "minute": 3.5,
+   "x_m": 50.2,
+   "y_m": 49.3
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 3.5,
+   "metres_gained": 15.0,
+   "end_metres_from_line": 45.0,
+   "start_x_m": 40.0,
+   "start_y_m": 52.0,
+   "end_x_m": 55.0,
+   "end_y_m": 48.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 3.9,
+   "metres_gained": 13.0,
+   "end_metres_from_line": 65.0,
+   "start_x_m": 22.0,
+   "start_y_m": 12.0,
+   "end_x_m": 35.0,
+   "end_y_m": 20.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "kick",
+   "team": "AWAY",
+   "minute": 4.1,
+   "metres_gained": 30.0,
+   "end_metres_from_line": 30.0,
+   "start_x_m": 60.0,
+   "start_y_m": 35.0,
+   "end_x_m": 30.0,
+   "end_y_m": 30.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "carry",
+   "team": "AWAY",
+   "minute": 4.5,
+   "metres_gained": 15.0,
+   "end_metres_from_line": 33.0,
+   "start_x_m": 48.0,
+   "start_y_m": 60.0,
+   "end_x_m": 33.0,
+   "end_y_m": 58.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "sin_bin",
+   "team": "HOME",
+   "minute": 4.5,
+   "x_m": 37.8,
+   "y_m": 58.6,
+   "label": "HOME yellow 4'"
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 5.0,
+   "metres_gained": 16.0,
+   "end_metres_from_line": 34.0,
+   "start_x_m": 50.0,
+   "start_y_m": 25.0,
+   "end_x_m": 66.0,
+   "end_y_m": 22.0,
+   "attack_dir": 1,
+   "linebreak": true
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 5.3,
+   "metres_gained": 14.0,
+   "end_metres_from_line": 20.0,
+   "start_x_m": 66.0,
+   "start_y_m": 22.0,
+   "end_x_m": 80.0,
+   "end_y_m": 40.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "try",
+   "team": "HOME",
+   "minute": 5.3,
+   "label": "HOME try 5'",
+   "x_m": 75.5,
+   "y_m": 34.2
+  },
+  {
+   "type": "error",
+   "kind": "forward_pass",
+   "team": "AWAY",
+   "minute": 5.9,
+   "x_m": 57.8,
+   "y_m": 48.4
+  },
+  {
+   "type": "carry",
+   "team": "AWAY",
+   "minute": 5.9,
+   "metres_gained": 18.0,
+   "end_metres_from_line": 52.0,
+   "start_x_m": 70.0,
+   "start_y_m": 45.0,
+   "end_x_m": 52.0,
+   "end_y_m": 50.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "pass",
+   "team": "HOME",
+   "minute": 6.2,
+   "metres_gained": 0.0,
+   "end_metres_from_line": 80.0,
+   "start_x_m": 33.0,
+   "start_y_m": 35.0,
+   "end_x_m": 20.0,
+   "end_y_m": 30.0,
+   "attack_dir": 1
+  },
+  {
+   "type": "pass",
+   "team": "AWAY",
+   "minute": 6.5,
+   "metres_gained": 0.0,
+   "end_metres_from_line": 30.1,
+   "start_x_m": 22.0,
+   "start_y_m": 25.0,
+   "end_x_m": 30.1,
+   "end_y_m": 23.0,
+   "attack_dir": -1
+  },
+  {
+   "type": "penalty_won",
+   "team": "HOME",
+   "conceded_by": "AWAY",
+   "minute": 6.5,
+   "x_m": 30.1,
+   "y_m": 23.0
+  },
+  {
+   "type": "carry",
+   "team": "AWAY",
+   "minute": 6.8,
+   "metres_gained": 8.1,
+   "end_metres_from_line": 65.9,
+   "start_x_m": 74.0,
+   "start_y_m": 52.0,
+   "end_x_m": 65.9,
+   "end_y_m": 49.3,
+   "attack_dir": -1
+  },
+  {
+   "type": "penalty_won",
+   "team": "HOME",
+   "conceded_by": "AWAY",
+   "minute": 6.8,
+   "x_m": 65.9,
+   "y_m": 49.3
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 7.2,
+   "metres_gained": 8.1,
+   "end_metres_from_line": 33.9,
+   "start_x_m": 58.0,
+   "start_y_m": 16.0,
+   "end_x_m": 66.1,
+   "end_y_m": 18.7,
+   "attack_dir": 1
+  },
+  {
+   "type": "penalty_won",
+   "team": "AWAY",
+   "conceded_by": "HOME",
+   "minute": 7.2,
+   "x_m": 66.1,
+   "y_m": 18.7
+  },
+  {
+   "type": "carry",
+   "team": "HOME",
+   "minute": 7.5,
+   "metres_gained": 8.1,
+   "end_metres_from_line": 51.9,
+   "start_x_m": 40.0,
+   "start_y_m": 62.0,
+   "end_x_m": 48.1,
+   "end_y_m": 59.3,
+   "attack_dir": 1
+  },
+  {
+   "type": "penalty_won",
+   "team": "AWAY",
+   "conceded_by": "HOME",
+   "minute": 7.5,
+   "x_m": 48.1,
+   "y_m": 59.3
+  }
+ ],
+ "summary": {
+  "players": [],
+  "team": {
+   "HOME": {
+    "points": 10,
+    "possessions": 13,
+    "metres": 142.4,
+    "carries": 11,
+    "carry_metres": 142.4,
+    "kicks": 0,
+    "kick_metres": 0.0,
+    "linebreaks": 2,
+    "tries": 2,
+    "conversions": 0,
+    "conversions_missed": 0,
+    "penalty_kicks": 0,
+    "drop_goals": 0,
+    "penalty_tries": 0,
+    "turnovers_won": 1,
+    "lineouts_won": 0,
+    "lineouts_lost": 0,
+    "scrums_won": 0,
+    "scrums_lost": 0,
+    "penalties_won": 2,
+    "penalties_conceded": 3,
+    "errors": 1,
+    "sin_bins": 1,
+    "red_cards": 0,
+    "penalty_reasons": {
+     "offside": 1
+    },
+    "error_kinds": {
+     "knock_on": 1
+    }
+   },
+   "AWAY": {
+    "points": 5,
+    "possessions": 7,
+    "metres": 89.1,
+    "carries": 4,
+    "carry_metres": 59.1,
+    "kicks": 1,
+    "kick_metres": 30.0,
+    "linebreaks": 0,
+    "tries": 1,
+    "conversions": 0,
+    "conversions_missed": 0,
+    "penalty_kicks": 0,
+    "drop_goals": 0,
+    "penalty_tries": 0,
+    "turnovers_won": 0,
+    "lineouts_won": 0,
+    "lineouts_lost": 0,
+    "scrums_won": 0,
+    "scrums_lost": 0,
+    "penalties_won": 3,
+    "penalties_conceded": 2,
+    "errors": 1,
+    "sin_bins": 0,
+    "red_cards": 0,
+    "penalty_reasons": {},
+    "error_kinds": {
+     "forward_pass": 1
+    }
+   }
+  }
+ }
+}

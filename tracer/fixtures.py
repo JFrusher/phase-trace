@@ -28,14 +28,14 @@ TRACES_DIR = Path(__file__).parent / "tests" / "traces"  # committed regressions
 DEV_TRACES = Path(__file__).parent / "dev_traces"        # scratch, gitignored
 
 
-def noisy_path(waypoints, durations, seed, hz=60, wobble_px=2.0,
-               speed_var=0.2, jitter_ms=3.0, smooth_pts=3):
-    """Human-ish trace of the waypoint script, in pixels, t relative from ~0."""
-    rng = random.Random(seed)
-    # two hand-tremor sines per axis, applied over absolute time. Physiological
-    # tremor is 5-9 Hz: fast enough that the recognizer's 150ms heading windows
-    # average it out, exactly like a real hand. Slower wobble (<4 Hz) reads as
-    # deliberate heading change and would test the noise, not the recognizer.
+def _tremor(rng, wobble_px):
+    """wobble(axis, t) -> hand-tremor offset in px, from two sines per axis.
+
+    Physiological tremor is 5-9 Hz: fast enough that the recognizer's 150ms
+    heading windows average it out, exactly like a real hand. Slower wobble
+    (<4 Hz) reads as deliberate heading change and would test the noise, not
+    the recognizer.
+    """
     tremor = [[(wobble_px * rng.uniform(0.3, 0.7), rng.uniform(5.0, 9.0),
                 rng.uniform(0, 2 * math.pi)) for _ in range(2)] for _ in range(2)]
 
@@ -43,7 +43,12 @@ def noisy_path(waypoints, durations, seed, hz=60, wobble_px=2.0,
         return sum(a * math.sin(2 * math.pi * f * t + ph)
                    for a, f, ph in tremor[axis])
 
-    raw = []  # (x_px, y_px, t)
+    return wobble
+
+
+def _trace_legs(waypoints, durations, rng, hz, speed_var, wobble):
+    """Walk the waypoint script leg by leg -> raw (x_px, y_px, t) samples."""
+    raw = []
     t_leg = 0.0
     for (x0, y0), (x1, y1), dur in zip(waypoints, waypoints[1:], durations):
         n = max(2, int(dur * hz))
@@ -59,8 +64,11 @@ def noisy_path(waypoints, durations, seed, hz=60, wobble_px=2.0,
             raw.append(((x0 + (x1 - x0) * fw) * PX + wobble(0, t),
                         (y0 + (y1 - y0) * fw) * PX + wobble(1, t), t))
         t_leg += dur
+    return raw
 
-    # corner rounding (position moving-average) + sampling jitter on t
+
+def _round_corners(raw, rng, jitter_ms, smooth_pts):
+    """Corner rounding (position moving-average) + sampling jitter on t."""
     half = smooth_pts // 2
     pts, prev_t = [], -1.0
     for i in range(len(raw)):
@@ -71,6 +79,19 @@ def noisy_path(waypoints, durations, seed, hz=60, wobble_px=2.0,
                              sum(p[1] for p in win) / len(win), t))
         prev_t = t
     return pts
+
+
+def noisy_path(waypoints, durations, seed, hz=60, wobble_px=2.0,
+               speed_var=0.2, jitter_ms=3.0, smooth_pts=3):
+    """Human-ish trace of the waypoint script, in pixels, t relative from ~0.
+
+    The three passes draw from one rng in a fixed order; changing that order
+    reshuffles every seeded fixture in the corpus.
+    """
+    rng = random.Random(seed)
+    wobble = _tremor(rng, wobble_px)
+    raw = _trace_legs(waypoints, durations, rng, hz, speed_var, wobble)
+    return _round_corners(raw, rng, jitter_ms, smooth_pts)
 
 
 @dataclass(frozen=True)
@@ -219,15 +240,9 @@ _sc("mouseup_fallback_end", **CS, end="mouseup",
 
 
 # --- harness ---------------------------------------------------------------
-def inject_raw(match, points, taps=(), shift=(), t0=0.0, end="a"):
-    """Fire raw inputs into a MatchState instantly, merged in timestamp order.
-
-    points: [[x, y, t_rel], ...]; taps: [[key, t_rel], ...];
-    shift: [[t_down, t_up], ...] — exactly the saved-trace JSON shape.
-    Ends the chain (key 'a' or mouse_up) just after the last input.
-    Returns match.last_chain.
-    """
-    stream = []  # (t, kind, payload); kind: 0=down 1=move 2=keydown 3=keyup
+def _merge_stream(points, taps, shift):
+    """(t, kind, payload) in timestamp order; kind: 0=down 1=move 2=keydown 3=keyup."""
+    stream = []
     for i, (x, y, t) in enumerate(points):
         stream.append((t, 0 if i == 0 else 1, (x, y)))
     for key, t in taps:
@@ -236,15 +251,32 @@ def inject_raw(match, points, taps=(), shift=(), t0=0.0, end="a"):
         stream.append((t_down, 2, "shift"))
         stream.append((t_up, 3, "shift"))
     stream.sort(key=lambda ev: (ev[0], ev[1]))
+    return stream
+
+
+def _fire(match, kind, payload, t):
+    """Replay one merged event into the MatchState."""
+    if kind == 0:
+        match.mouse_down(payload[0], payload[1], t)
+    elif kind == 1:
+        match.mouse_move(payload[0], payload[1], t)
+    elif kind == 2:
+        match.key_down(payload, t)
+    else:
+        match.key_up(payload, t)
+
+
+def inject_raw(match, points, taps=(), shift=(), t0=0.0, end="a"):
+    """Fire raw inputs into a MatchState instantly, merged in timestamp order.
+
+    points: [[x, y, t_rel], ...]; taps: [[key, t_rel], ...];
+    shift: [[t_down, t_up], ...] — exactly the saved-trace JSON shape.
+    Ends the chain (key 'a' or mouse_up) just after the last input.
+    Returns match.last_chain.
+    """
+    stream = _merge_stream(points, taps, shift)
     for t, kind, payload in stream:
-        if kind == 0:
-            match.mouse_down(payload[0], payload[1], t0 + t)
-        elif kind == 1:
-            match.mouse_move(payload[0], payload[1], t0 + t)
-        elif kind == 2:
-            match.key_down(payload, t0 + t)
-        else:
-            match.key_up(payload, t0 + t)
+        _fire(match, kind, payload, t0 + t)
     if points:
         t_end = t0 + max(ev[0] for ev in stream) + 0.05
         if end == "a":
@@ -262,56 +294,121 @@ def inject(match, sc: Scenario, t0=0.0):
                       shift=sc.shift, t0=t0, end=sc.end)
 
 
+# --- expect-vocabulary checks ----------------------------------------------
+# Each takes (match, segs, expect) and returns (want, got) on failure, else
+# None. CHECKS is ordered: it decides the order failures are reported in.
+def _check_actions(match, segs, expect):
+    got = [s.action for s in segs]
+    if got != expect["actions"]:
+        return expect["actions"], got or "no chain"
+    return None
+
+
+def _check_forbid(match, segs, expect):
+    got = [s.action for s in segs]
+    if any(a in expect["forbid"] for a in got):
+        return f"none of {sorted(expect['forbid'])}", got
+    return None
+
+
+def _check_n_segments(match, segs, expect):
+    want = expect["n_segments"]
+    lo, hi = (want, want) if isinstance(want, int) else want
+    if not lo <= len(segs) <= hi:
+        return want, len(segs)
+    return None
+
+
+def _check_rejected(match, segs, expect):
+    if not expect["rejected"]:      # falsy value means "don't check"
+        return None
+    if match.last_chain is not None or not match.last_debug.get("rejected"):
+        got = [s.action for s in segs]
+        return "rejected chain", got or "no rejection reason"
+    return None
+
+
+def _check_linebreaks(match, segs, expect):
+    got = [i for i, s in enumerate(segs) if s.linebreak]
+    if got != expect["linebreaks"]:
+        return expect["linebreaks"], got
+    return None
+
+
+def _check_intercepted(match, segs, expect):
+    got = [i for i, s in enumerate(segs) if s.intercepted]
+    if got != expect["intercepted"]:
+        return expect["intercepted"], got
+    return None
+
+
+def _check_players(match, segs, expect):
+    got = [(i, p.number, p.role) for i, s in enumerate(segs) for p in s.players]
+    want = [tuple(w) for w in expect["players"]]
+    if got != want:
+        return want, got
+    return None
+
+
+def _check_possession_after(match, segs, expect):
+    if match.possession != expect["possession_after"]:
+        return expect["possession_after"], match.possession
+    return None
+
+
+def _check_event_types(match, segs, expect):
+    got = [e["type"] for e in match.events]
+    if got != expect["event_types"]:
+        return expect["event_types"], got
+    return None
+
+
+CHECKS = {
+    "actions": _check_actions,
+    "forbid": _check_forbid,
+    "n_segments": _check_n_segments,
+    "rejected": _check_rejected,
+    "linebreaks": _check_linebreaks,
+    "intercepted": _check_intercepted,
+    "players": _check_players,
+    "possession_after": _check_possession_after,
+    "event_types": _check_event_types,
+}
+
+
 def check(match, expect: dict) -> list[str]:
     """Compare outcome against the expect vocabulary; [] = pass."""
     segs = match.last_chain.segments if match.last_chain else []
-    got_actions = [s.action for s in segs]
     out = []
-
-    def bad(key, want, got):
-        out.append(f"{key}: expected {want}, got {got}")
-
-    if "actions" in expect and got_actions != expect["actions"]:
-        bad("actions", expect["actions"], got_actions or "no chain")
-    if "forbid" in expect:
-        hit = [a for a in got_actions if a in expect["forbid"]]
-        if hit:
-            bad("forbid", f"none of {sorted(expect['forbid'])}", got_actions)
-    if "n_segments" in expect:
-        want = expect["n_segments"]
-        lo, hi = (want, want) if isinstance(want, int) else want
-        if not lo <= len(segs) <= hi:
-            bad("n_segments", want, len(segs))
-    if expect.get("rejected"):
-        if match.last_chain is not None or not match.last_debug.get("rejected"):
-            bad("rejected", "rejected chain", got_actions or "no rejection reason")
-    if "linebreaks" in expect:
-        got = [i for i, s in enumerate(segs) if s.linebreak]
-        if got != expect["linebreaks"]:
-            bad("linebreaks", expect["linebreaks"], got)
-    if "intercepted" in expect:
-        got = [i for i, s in enumerate(segs) if s.intercepted]
-        if got != expect["intercepted"]:
-            bad("intercepted", expect["intercepted"], got)
-    if "players" in expect:
-        got = [(i, p.number, p.role) for i, s in enumerate(segs) for p in s.players]
-        want = [tuple(w) for w in expect["players"]]
-        if got != want:
-            bad("players", want, got)
-    if "possession_after" in expect and match.possession != expect["possession_after"]:
-        bad("possession_after", expect["possession_after"], match.possession)
-    if "event_types" in expect:
-        got = [e["type"] for e in match.events]
-        if got != expect["event_types"]:
-            bad("event_types", expect["event_types"], got)
+    for key, checker in CHECKS.items():
+        if key not in expect:
+            continue
+        failure = checker(match, segs, expect)
+        if failure is not None:
+            want, got = failure
+            out.append(f"{key}: expected {want}, got {got}")
     return out
+
+
+def open_play_match(attack_dir=1, possession="home",
+                    home="HOME", away="AWAY") -> MatchState:
+    """A MatchState with no set piece pending, clock running.
+
+    A corpus case is a bare traced line being judged on its geometry, but a
+    freshly built match is legitimately waiting on a kickoff — which snaps the
+    start to the centre spot and forces the first segment to a KICK. Clearing
+    the pending reason is what makes the scenario mean what it says.
+    """
+    m = MatchState(home, away, attack_dir_home=attack_dir,
+                   possession=possession)
+    m.pending_start_reason = None
+    m.clock.start(t=0.0)
+    return m
 
 
 def run(sc: Scenario) -> list[str]:
     """Fresh MatchState -> inject -> check. The uniform corpus runner."""
-    m = MatchState("HOME", "AWAY", attack_dir_home=sc.attack_dir,
-                   possession=sc.possession)
-    m.clock.start(t=0.0)
+    m = open_play_match(sc.attack_dir, sc.possession)
     inject(m, sc)
     return check(m, sc.expect)
 
@@ -319,10 +416,7 @@ def run(sc: Scenario) -> list[str]:
 def run_trace_file(path) -> list[str]:
     """Saved-trace JSON -> fresh MatchState -> inject_raw -> check."""
     d = json.loads(Path(path).read_text(encoding="utf-8"))
-    m = MatchState("HOME", "AWAY",
-                   attack_dir_home=d.get("attack_dir_home", 1),
-                   possession=d.get("possession", "home"))
-    m.clock.start(t=0.0)
+    m = open_play_match(d.get("attack_dir_home", 1), d.get("possession", "home"))
     inject_raw(m, d["points"], d.get("taps", ()), d.get("shift", ()))
     return check(m, d.get("expect", {}))
 

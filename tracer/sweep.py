@@ -26,9 +26,8 @@ def score():
     return len(cases) - len(failed), len(cases), failed
 
 
-def main():
-    keys = list(GRID)
-    baseline = tuple(getattr(config, k) for k in keys)
+def _run_grid(keys, baseline):
+    """Score every GRID combination, restoring config afterwards (never writes)."""
     rows = []
     try:
         for combo in itertools.product(*(GRID[k] for k in keys)):
@@ -39,16 +38,26 @@ def main():
     finally:
         for k, v in zip(keys, baseline):
             setattr(config, k, v)
+    return rows
 
+
+def _format_row(keys, baseline, passed, total, combo, failed) -> str:
+    label = " ".join(f"{k}={v}" for k, v in zip(keys, combo))
+    mark = "  (baseline)" if combo == baseline else ""
+    tail = ""
+    if failed:
+        shown = ", ".join(failed[:4]) + ("..." if len(failed) > 4 else "")
+        tail = f"  fail: {shown}"
+    return f"{label:<38} {passed}/{total}{mark}{tail}"
+
+
+def main():
+    keys = list(GRID)
+    baseline = tuple(getattr(config, k) for k in keys)
+    rows = _run_grid(keys, baseline)
     rows.sort(key=lambda r: -r[0])
     for passed, total, combo, failed in rows:
-        label = " ".join(f"{k}={v}" for k, v in zip(keys, combo))
-        mark = "  (baseline)" if combo == baseline else ""
-        tail = ""
-        if failed:
-            shown = ", ".join(failed[:4]) + ("..." if len(failed) > 4 else "")
-            tail = f"  fail: {shown}"
-        print(f"{label:<38} {passed}/{total}{mark}{tail}")
+        print(_format_row(keys, baseline, passed, total, combo, failed))
 
 
 if __name__ == "__main__":

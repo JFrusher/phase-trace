@@ -12,6 +12,18 @@ def test_good_events_pass():
     assert validate_events(GOOD, "ENG", "WAL") == []
 
 
+def test_every_start_reason_is_priced_and_exportable():
+    # the translator falls back to 1.0 for an unknown start_reason rather than
+    # failing, so nothing downstream would ever complain about a reason the
+    # weights table forgot — which makes this the only place it gets caught
+    from tracer import config
+    from translators.rugby import _WEIGHTS
+    assert set(config.START_REASONS) <= set(_WEIGHTS["origin_factor"])
+    events = [{**GOOD[0], "minute": float(i), "start_reason": reason}
+              for i, reason in enumerate(config.START_REASONS)]
+    assert validate_events(events, "ENG", "WAL") == []
+
+
 def test_missing_field_caught_by_real_translator():
     errors = validate_events([{"type": "try", "minute": 1.0}], "ENG", "WAL")
     assert errors and "translate() rejected" in errors[0]

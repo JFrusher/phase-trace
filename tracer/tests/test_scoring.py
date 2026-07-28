@@ -13,9 +13,7 @@ from tracer.match_state import MatchState
 
 
 def run_scenario(sc):
-    m = MatchState("HOME", "AWAY", attack_dir_home=sc.attack_dir,
-                   possession=sc.possession)
-    m.clock.start(t=0.0)
+    m = fixtures.open_play_match(sc.attack_dir, sc.possession)
     fixtures.inject(m, sc)
     return m
 

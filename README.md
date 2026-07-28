@@ -1,6 +1,6 @@
-# Match Momentum
+# Phase Trace
 
-[![tests](https://github.com/Jfrusher/match-momentum/actions/workflows/tests.yml/badge.svg)](https://github.com/Jfrusher/match-momentum/actions/workflows/tests.yml)
+[![tests](https://github.com/Jfrusher/phase-trace/actions/workflows/tests.yml/badge.svg)](https://github.com/Jfrusher/phase-trace/actions/workflows/tests.yml)
 
 **Trace a rugby match with your mouse, get a broadcast-style momentum chart out of it.**
 
@@ -28,6 +28,8 @@ python -m tracer.app 8123            # optional port, default 8080
 # chart an event file
 python momentum.py examples/tracer-sample.json out.png --sport rugby
 python momentum.py examples/events_arg_egy.json out.png --sport football
+
+# browse an exported match: open report/index.html and pick the export folder
 ```
 
 `examples/tracer-sample.json` is an actual tracer export that has been run through the rugby translator, so it doubles as proof that what the tracer writes is what `momentum.py` can read.
@@ -37,12 +39,31 @@ python momentum.py examples/events_arg_egy.json out.png --sport football
 The mechanic, the full hotkey table and the tuning workflow are in [tracer/README.md](tracer/README.md). The short version:
 
 - Hold the mouse button when a possession starts and follow the ball. Pass, run, pass, tackle are all one line.
-- Tap `A` or `Space` when the play dies. That, not letting go of the button, is what ends the chain.
+- Tap `A` or `Space` when the play dies. That, not letting go of the button, is what ends the chain. Drawing the ball out of play ends it for you, since in law it is over.
 - The line redraws colour-coded by inferred action while you go, so you can see what the recognizer thinks.
 
 The recognizer only looks at the shape of the line, never at how fast you drew it. That was deliberate: I wanted to trace off paused or scrubbed video and get the same answer as tracing live. [`tracer/tests/test_pace_invariance.py`](tracer/tests/test_pace_invariance.py) exists to stop that quietly breaking.
 
-Possessions also record how they started (scrum, lineout, penalty, restart, turnover, interception), because in rugby that's a fair chunk of what a possession is worth. Most of it comes off the trace: a kick that ends at the touchline is a lineout, and the kick-to-touch-on-the-full law says where that lineout gets taken. Scrums and penalties are the two a line can't show you, so those are single taps. Whatever gets inferred turns up as a chip on the pitch, and the chip is also how you correct it. With only two teams to pick from, a wrong guess is one click from right.
+Possessions also record how they started (scrum, lineout, penalty, restart, turnover, interception, 22 drop-out), because in rugby that's a fair chunk of what a possession is worth. Most of it comes off the trace: a line crossing the touchline is a lineout, and the kick-to-touch-on-the-full law says where that lineout gets taken. What a line can't show you is a scrum, a penalty, and whether the ball was grounded in the in-goal — the first two are single taps, and the third is a chooser on the chip with the likely answer already picked. Whatever gets inferred turns up as a chip on the pitch, and the chip is also how you correct it. With only two teams to pick from, a wrong guess is one click from right.
+
+## After the match
+
+Two exports, answering different questions.
+
+**Validate + export** writes the momentum JSON `momentum.py` reads — and refuses to write until
+[`tracer/validate.py`](tracer/validate.py) has dry-run the real pipeline, so nothing can fail
+downstream that didn't already fail there.
+
+**Export data (CSV)** writes an analysis bundle — `match.json` plus `actions.csv`, `players.csv`,
+`team.csv`, `positions.csv` — one row per carry, pass and kick, with pitch coordinates in metres.
+Every field is optional; a column is blank where nothing was tagged, which is the point.
+
+Open [`report/index.html`](report/) and pick that folder for a pitch map, a Gaussian-KDE heatmap
+(including where a team *conceded* penalties), team and player tables, and a momentum curve. No
+build step, no server, nothing leaves the machine. That curve is reconstructed and approximate —
+[`report/README.md`](report/README.md) says how it differs. Second-half positions fold back into
+the first-half frame, so a heatmap aggregates across the whole match instead of splitting to both
+ends.
 
 ## The momentum model
 
@@ -72,20 +93,23 @@ DataSource.parse()  ->  Sport.translate()  ->  MomentumEngine.compute()  ->  cha
 | [`translators/`](translators/) | One `BaseSport` per sport: event weighting plus match structure (duration, half-time marker, decay half-life, axis labels). Static weight tables sit alongside as JSON. |
 | [`sources/`](sources/) | One `BaseDataSource` per data provider, parsing raw match data into a common shape. Deliberately independent of `translators/`, so any sport works with any source instead of needing a class per (sport, provider) pair. |
 | [`tracer/`](tracer/) | The Live Trace app: capture, recognition, review, export. Writes the same JSON the sources read. |
+| [`report/`](report/) | Standalone no-build viewer for an export folder. Client-side only; ports the engine's math to JS for an approximate curve. |
 
 To add a sport, implement `BaseSport` in `translators/`, register it in the `SPORTS` dict in `translators/__init__.py`, and run with `--sport yourname`. [`translators/rugby.py`](translators/rugby.py) is the worked example; its module docstring covers territory-based threat and why cards are markers rather than something fed into the decay sum.
 
 To add a data provider (Opta, StatsBomb, whatever else), implement `BaseDataSource` in `sources/` and map its raw fields into the shape your chosen `Sport.translate()` expects. Nothing downstream changes.
 
+Diagrams for each layer, with the reasoning and the trade-offs behind them, are in [`docs/`](docs/) — six pages covering composition, the recognizer, the possession lifecycle, rugby-law inference, export topology and calibration.
+
 ## Tests
 
-225 tests, run on every push and pull request:
+326 tests, run on every push and pull request:
 
 ```bash
 python -m pytest -q
 ```
 
-The recognizer is gated by a corpus of 39 synthetic trace scenarios in [`tracer/fixtures.py`](tracer/fixtures.py), replayed at baseline config, plus the pace-invariance fence. Every threshold and weight it depends on is a flat constant in [`tracer/config.py`](tracer/config.py). [tracer/TUNING.md](tracer/TUNING.md) covers the loop for moving them (save a trace, promote it with its expected truth, sweep or fit) and where the calibration currently stands.
+The recognizer is gated by a corpus of 39 synthetic trace scenarios in [`tracer/fixtures.py`](tracer/fixtures.py), replayed at baseline config, plus the pace-invariance fence. Every threshold and weight it depends on is a flat constant in [`tracer/config.py`](tracer/config.py). [tracer/TUNING.md](tracer/TUNING.md) covers the loop for moving them (save a trace, promote it with its expected truth, sweep or fit) and where the calibration currently stands. Misreads you correct live — clicking a segment to re-cycle it — are logged to a local database and folded into the weight proposal by `python -m tracer.calibrate`, run before the next game. None of the three tools ever writes `config.py`: they print a proposal, you decide.
 
 ## Background
 

@@ -38,9 +38,7 @@ def training_set():
              if "actions" in sc.expect
              and not any(k in HINT_KEYS for _, k in sc.taps)]
     for name, sc in cases:
-        m = MatchState("HOME", "AWAY", attack_dir_home=sc.attack_dir,
-                       possession=sc.possession)
-        m.clock.start(t=0.0)
+        m = fixtures.open_play_match(sc.attack_dir, sc.possession)
         fixtures.inject(m, sc)
         segs = m.last_chain.segments if m.last_chain else []
         if len(segs) != len(sc.expect["actions"]):
@@ -67,6 +65,21 @@ def _probs(scores):
     return {c: e / total for c, e in exps.items()}
 
 
+def _accumulate_grad(params, xs, labels):
+    """(gradient, cross-entropy loss) summed over the dataset for one epoch."""
+    grad = dict.fromkeys(PARAM_NAMES, 0.0)
+    loss = 0.0
+    for x, label in zip(xs, labels):
+        probs = _probs(_scores(params, x))
+        loss -= math.log(max(probs[label], 1e-12))
+        for c in features.SCORED_CLASSES:
+            err = probs[c] - (1.0 if label == c else 0.0)
+            grad[f"B_{c}"] += err
+            for f in features.FEATURES:
+                grad[f"W_{c}_{f.upper()}"] += err * x[f]
+    return grad, loss
+
+
 def train(xs, labels, epochs, lr, l2):
     """(fitted params, per-epoch losses). Reads config priors, never writes."""
     prior = {n: getattr(config, n) for n in PARAM_NAMES}
@@ -74,16 +87,7 @@ def train(xs, labels, epochs, lr, l2):
     losses = []
     n = len(xs)
     for _ in range(epochs):
-        grad = dict.fromkeys(PARAM_NAMES, 0.0)
-        loss = 0.0
-        for x, label in zip(xs, labels):
-            probs = _probs(_scores(params, x))
-            loss -= math.log(max(probs[label], 1e-12))
-            for c in features.SCORED_CLASSES:
-                err = probs[c] - (1.0 if label == c else 0.0)
-                grad[f"B_{c}"] += err
-                for f in features.FEATURES:
-                    grad[f"W_{c}_{f.upper()}"] += err * x[f]
+        grad, loss = _accumulate_grad(params, xs, labels)
         loss /= n
         for name in PARAM_NAMES:
             reg = params[name] - prior[name]
@@ -131,8 +135,13 @@ def main(argv=None):
 
     params, losses = train(xs, labels, args.epochs, args.lr, args.l2)
     print(f"loss: {losses[0]:.4f} -> {losses[-1]:.4f} over {args.epochs} epochs")
+    _report_corpus(params, xs, labels)
+    _print_config_block(params)
 
-    before_p, total, before_fail = sweep.score()
+
+def _report_corpus(params, xs, labels):
+    """Corpus pass count and the label->predicted confusion under the proposal."""
+    before_p, total, _ = sweep.score()
     after_p, _, after_fail = _corpus_pass(params)
     print(f"corpus: {before_p}/{total} at current config -> {after_p}/{total} proposed")
     if after_fail:
@@ -142,6 +151,8 @@ def main(argv=None):
         marker = "" if label == got else "   <-- MISS"
         print(f"  {label:>5} -> {got:<5} {count}{marker}")
 
+
+def _print_config_block(params):
     print("\nproposed config block (paste by hand if the numbers convince you):")
     for c in features.SCORED_CLASSES:
         print(f"B_{c} = {params[f'B_{c}']:.3f}")

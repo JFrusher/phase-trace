@@ -21,8 +21,7 @@ def test_noisy_path_sane():
 
 
 def test_inject_raw_roundtrip():
-    m = MatchState("H", "A")
-    m.clock.start(t=0.0)
+    m = fixtures.open_play_match()
     points = [[80, 280, 0.0], [120, 280, 1.0], [160, 280, 2.0]]
     fixtures.inject_raw(m, points, taps=(("9", 0.1),))
     assert m.chain_seq == 1
@@ -33,8 +32,7 @@ def test_inject_raw_roundtrip():
 
 def test_check_catches_wrong_expect():
     sc = fixtures.SCENARIOS["carry_straight"]
-    m = MatchState("H", "A")
-    m.clock.start(t=0.0)
+    m = fixtures.open_play_match()
     fixtures.inject(m, sc)
     mismatches = fixtures.check(m, {"actions": ["KICK"]})
     assert mismatches and "actions" in mismatches[0]

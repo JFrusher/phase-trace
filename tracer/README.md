@@ -21,7 +21,9 @@ python -m tracer.app 8123      # optional port (default 8080)
    tackle are one unbroken line.
 2. Tap **`A` or `Space`** when the play dies (tackle/ruck/whistle). That —
    not releasing the button — is the authoritative end; release is only a
-   defensive fallback.
+   defensive fallback. Tracing the ball **out of play** (over a touchline or
+   a dead-ball line) ends the chain by itself, because in law it is over:
+   keep drawing straight out and the lineout or drop-out lands without a tap.
 3. The raw white line redraws color-coded by inferred action:
    amber carry · blue pass · red kick (dashed = intercepted).
 
@@ -53,12 +55,26 @@ non-blocking timeline editor for corrections during stoppages.
 ## How the next possession starts, and fixing it
 
 Every possession is recorded with the reason it began — `kickoff`, `restart`,
-`scrum`, `lineout`, `penalty`, `turnover_open`, `interception`, `kick_return` —
-and that reason scales its momentum weight (`origin_factor` in
+`scrum`, `lineout`, `penalty`, `turnover_open`, `interception`, `kick_return`,
+`drop_out_22` — and that reason scales its momentum weight (`origin_factor` in
 `translators/rugby_weights.json`). Most of it is read off the trace itself: a
-kick finishing at a touchline is a lineout, a score is a restart, an
-intercepted pass is an interception. Only the two things a line cannot show —
-a scrum and a penalty — are tapped.
+line crossing a touchline is a lineout, a score is a restart, an intercepted
+pass is an interception, a ball put over the dead-ball line is a 22 drop-out.
+Only the two things a line cannot show — a scrum and a penalty — are tapped.
+
+**Possession always means who has the ball**, never who is about to get it.
+So the side that concedes a score holds the restart (they take the drop kick,
+which hands it over when you trace it), and halftime gives the kickoff to
+whoever did not start the match with it.
+
+**A kickoff or restart is taken from the centre spot, as a kick.** Both are
+certain before the trace exists, so neither is left to the recognizer: the
+traced path is shifted onto the spot (the whole path, so its shape survives
+and a press off the mark cannot become a leg of its own), and the first
+segment is a KICK however short it was drawn — a restart read as a carry
+would leave the ball with the side that just conceded. The restart chip sits
+below the spot rather than on it, so it can't swallow the press that starts
+the kick.
 
 The result appears as a **chip** on the pitch, above its mark, and the chip is
 the correction UI:
@@ -68,15 +84,23 @@ the correction UI:
 - **Click `swap_horiz`** on a lineout to move the mark. A kick to touch from
   outside your own 22 is assumed to have gone out on the full, so the mark
   goes back to the kick; click to say it bounced first.
-- The **type is never editable** — it was either certain or you typed it. A
-  lineout does not become a scrum.
-- A penalty chip also offers *to touch · at goal · tap · scrum*, pre-selected
+- The **type is never editable where geometry settles it** — a lineout does
+  not become a scrum. The two exceptions are the things a line genuinely
+  cannot show, and both get a chooser row instead:
+- A **penalty** chip offers *to touch · at goal · tap · scrum*, pre-selected
   on the guess. Ignoring it accepts that guess; nothing blocks. Choosing
   *to touch* arms the next stroke, so the lineout that follows correctly keeps
   the throw with the kicking team.
+- A trace finishing **in the in-goal** offers *try · held up · drop-out*.
+  Grounding is invisible in a line, so it is guessed: carrying into the end
+  you are attacking reads as a try (scored immediately, `C`/`M` still
+  attaches the conversion), while a kick into the in-goal, or ending up in
+  your own, reads as a 22 drop-out. Switching the choice rewinds the chain
+  and re-commits it, so a try taken back also takes its five points back.
 
 **Click any drawn segment** to cycle its action (carry → pass → kick); the
-chain re-commits with the consequences that follow.
+chain re-commits with the consequences that follow. Every such correction is
+logged for pre-game calibration (see [Tuning](#tuning)).
 
 ## Autosave
 
@@ -123,8 +147,10 @@ The loop: save the misbehaving trace in dev mode → promote it with the
 expected truth → `python -m tracer.sweep` grid-sweeps any constants over the
 whole corpus (39 synthetic scenarios + promoted real traces), and
 `python -m tracer.fit` proposes classification weights by softmax regression
-over the same corpus. Neither ever writes `config.py` — read the output,
-decide, edit by hand.
+over the same corpus. Corrections you make live in the app (re-cycling a
+segment) are also logged and folded into the same proposal by
+`python -m tracer.calibrate` — run it pre-game. None of the three ever writes
+`config.py` — read the output, decide, edit by hand.
 
 ## Manual test recipe (browser half; the pure logic is pytest-covered)
 
@@ -151,8 +177,12 @@ move are the boundary accept level, the ~27m geometric kick threshold, and the
 `origin_factor` weights in `translators/rugby_weights.json`, which are
 judgement calls with no reference data behind them.
 
-The loop for fixing that is already here: dev mode → Save last trace → promote
-with an `"expect"` key → `python -m tracer.sweep`.
+The loop for fixing that is already here, two ways in: dev mode → Save last
+trace → promote with an `"expect"` key → `python -m tracer.sweep`; or correct
+misreads live (click a segment to re-cycle it) and run
+`python -m tracer.calibrate` before the next game, which folds those logged
+corrections into the `fit` weight proposal. See **[TUNING.md](TUNING.md)** for
+the self-correction loop in full.
 
 ## Known MVP gaps (deliberate)
 

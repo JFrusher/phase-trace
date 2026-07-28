@@ -10,6 +10,7 @@ from translators.rugby import RugbySport
 from tracer import config
 from tracer.continuity import PathPoint, PlayChain, PlayerTag, Segment
 from tracer.events import assign_teams, chain_to_events, summarise
+from tracer import fixtures
 from tracer.match_state import MatchState
 
 PX = config.PX_PER_M
@@ -87,7 +88,10 @@ def test_players_attached():
 
 def test_match_state_full_flow_trace_plus_taps():
     """Phase-4 exit criteria: traced + tap-annotated chain -> expected weight."""
-    m = MatchState("ENG", "WAL")
+    # mid-match: a fresh match is waiting on a kickoff, which snaps the start
+    # to the centre spot and forces a KICK — a carry can't be traced from it
+    m = fixtures.open_play_match(home="ENG", away="WAL")
+    m.pending_start_reason = "lineout"
     m.clock.start(t=100.0)
     m.mouse_down(LEFT + 10 * PX, 280, 100.0)
     for i in range(1, 151):  # 10m -> 20m carry over 2.5s at 60Hz
@@ -97,16 +101,15 @@ def test_match_state_full_flow_trace_plus_taps():
     m.key_down("a", 102.6)    # authoritative chain end
     assert not m.recorder.active
     (ev,) = m.events
-    # 10m gained, ends 80m out, 1 linebreak, and it is the match's first
-    # possession so it starts from the kickoff (origin factor 0.9):
-    # round((.15+.35*.25 + .3*.2)*1.25*0.9, 2) = 0.33
+    # 10m gained, ends 80m out, 1 linebreak, off a lineout (origin factor 1.15):
+    # round((.15+.35*.25 + .3*.2)*1.25*1.15, 2) = 0.43
     assert ev["metres_gained"] == 10.0
     assert ev["end_metres_from_line"] == 80.0
     assert ev["linebreaks"] == 1
-    assert ev["start_reason"] == "kickoff"
+    assert ev["start_reason"] == "lineout"
     assert ev["players"] == [{"number": 9, "role": "start"}]
     (std,) = RugbySport().translate([ev])
-    assert std.weight == 0.33
+    assert std.weight == 0.43
     # evidence capture: raw inputs + segmentation debug snapshot per chain
     assert m.chain_seq == 1
     assert m.last_chain is not None

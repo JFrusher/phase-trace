@@ -20,7 +20,7 @@ import math
 
 from . import config
 
-FEATURES = ("backward", "lateral", "straight", "dist")
+FEATURES = ("backward", "lateral", "straight", "dist", "bent")
 SCORED_CLASSES = ("PASS", "KICK")
 CLASSES = ("CARRY",) + SCORED_CLASSES  # tie-break order: CARRY wins
 
@@ -52,6 +52,9 @@ def extract(points, attack_dir):
         "straight": math.tanh((straightness - config.F_STRAIGHT_CENTER)
                               / config.F_STRAIGHT_SCALE),
         "dist": _rect_tanh(net_m, config.F_DIST_SCALE_M),
+        # KICK veto: rectified bentness, positive only below F_BENT_CENTER, so a
+        # long BENT run can't clear the distance bias a straight kick does.
+        "bent": _rect_tanh(config.F_BENT_CENTER - straightness, config.F_BENT_SCALE),
     }
     raw = {"fwd_m": round(fwd_m, 2), "lat_m": round(lat_m, 2),
            "net_m": round(net_m, 2), "straightness": round(straightness, 3)}

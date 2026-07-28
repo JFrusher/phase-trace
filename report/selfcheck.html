@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Match Report — self-check</title>
+  <style>
+    body { font-family: ui-monospace, Consolas, monospace; max-width: 760px; margin: 30px auto; padding: 0 16px; }
+    h1 { font-size: 1.2rem; }
+    .pass { color: #1a7f37; } .fail { color: #b3261e; font-weight: 700; }
+    #summary { font-weight: 700; margin: 12px 0; }
+    li { margin: 3px 0; }
+  </style>
+</head>
+<body>
+  <h1>Match Report — self-check</h1>
+  <div id="summary"></div>
+  <ul id="out"></ul>
+
+  <script src="pitch.js"></script>
+  <script src="momentum.js"></script>
+  <script>
+    var out = document.getElementById("out"), pass = 0, fail = 0;
+    function ok(name, cond) {
+      var li = document.createElement("li");
+      li.className = cond ? "pass" : "fail";
+      li.textContent = (cond ? "PASS  " : "FAIL  ") + name;
+      out.appendChild(li);
+      cond ? pass++ : fail++;
+      console.assert(cond, name);
+    }
+    function near(a, b, tol) { return Math.abs(a - b) <= (tol || 1e-6); }
+
+    var M = window.MR;
+
+    // territory weight (port of translators/rugby.py _territory_weight, origin 1.0)
+    ok("territoryWeight(40,0,0) == 0.8", near(M.momentum.territoryWeight(40, 0, 0), 0.8));
+    ok("territoryWeight(0,50,0) == 0.3", near(M.momentum.territoryWeight(0, 50, 0), 0.3));
+    ok("territoryWeight(20,25,1) == 0.69", near(M.momentum.territoryWeight(20, 25, 1), 0.69));
+
+    // gaussian blur: conserves mass and leaves a constant unchanged
+    var flat = [5, 5, 5, 5, 5, 5, 5, 5];
+    var bf = M.momentum.gaussianBlur1d(flat, 3);
+    ok("blur of constant stays constant", bf.every(function (v) { return near(v, 5, 1e-6); }));
+    var spike = [0, 0, 0, 10, 0, 0, 0, 0];
+    var bs = M.momentum.gaussianBlur1d(spike, 1.5);
+    var sumIn = spike.reduce(function (a, b) { return a + b; }, 0);
+    var sumOut = bs.reduce(function (a, b) { return a + b; }, 0);
+    ok("blur conserves mass (reflect pad)", near(sumIn, sumOut, 1e-6));
+    ok("blur spreads the spike (peak drops)", bs[3] < 10 && bs[3] > 0);
+
+    // coordinate mapping (port of tracer/pitch.py xPx/yPx)
+    ok("xPx(0) == 80 (left try line)", M.pitch.xPx(0) === 80);
+    ok("xPx(100) == 880 (right try line)", M.pitch.xPx(100) === 880);
+    ok("yPx(35) == 280 (mid width)", M.pitch.yPx(35) === 280);
+    ok("hasCoords true for full coords", M.pitch.hasCoords({ start_x_m: 1, start_y_m: 2, end_x_m: 3, end_y_m: 4 }));
+    ok("hasCoords false when missing", !M.pitch.hasCoords({ start_x_m: 1, start_y_m: 2, end_x_m: 3 }));
+
+    // momentum timebase: real minutes -> 'minute'; all-zero -> 'sequence'
+    var timed = [
+      { type: "carry", team: "A", minute: 1, metres_gained: 30, end_metres_from_line: 20 },
+      { type: "try", team: "A", minute: 2 },
+      { type: "carry", team: "B", minute: 40, metres_gained: 10, end_metres_from_line: 60 },
+      { type: "carry", team: "B", minute: 42, metres_gained: 15, end_metres_from_line: 40 }
+    ];
+    var mt = M.momentum.build(timed, "A", "B");
+    ok("timed build is usable", mt.usable === true);
+    ok("timed build uses minute axis", mt.timebase === "minute");
+    ok("home/away series length matches t", mt.home.length === mt.t.length && mt.away.length === mt.t.length);
+    ok("series normalized within [0,1]", mt.home.concat(mt.away).every(function (v) { return v >= 0 && v <= 1.0000001; }));
+
+    var flatMin = timed.map(function (a) { var c = {}; for (var k in a) c[k] = a[k]; c.minute = 0; return c; });
+    var mf = M.momentum.build(flatMin, "A", "B");
+    ok("all-zero minutes -> sequence axis", mf.usable && mf.timebase === "sequence");
+
+    document.getElementById("summary").innerHTML =
+      (fail === 0 ? '<span class="pass">ALL PASS</span> ' : '<span class="fail">' + fail + ' FAILED</span> ') +
+      "(" + pass + "/" + (pass + fail) + ")";
+  </script>
+</body>
+</html>

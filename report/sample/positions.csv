@@ -1,0 +1,33 @@
+minute,type,team,conceded_by,x_m,y_m,end_x_m,end_y_m,kind,outcome,reason,label
+0.1,carry,HOME,,30.0,40.0,45.0,38.0,,,,
+0.4,carry,HOME,,45.0,38.0,58.0,44.0,,,,
+0.8,carry,HOME,,58.0,44.0,72.0,30.0,,,,
+1.0,carry,HOME,,72.0,30.0,88.0,34.0,,,,
+1.1,try,HOME,,82.9,32.7,,,,,,HOME try 1'
+1.7,pass,AWAY,,55.0,20.0,40.0,18.0,,,,
+2.0,pass,HOME,,40.0,18.0,26.0,30.0,,,,
+2.0,turnover_won,HOME,,30.5,26.1,,,,,,
+2.4,carry,AWAY,,30.0,30.0,12.0,40.0,,,,
+2.4,try,AWAY,,17.8,36.8,,,,,,AWAY try 2'
+3.1,carry,HOME,,25.0,55.0,35.2,53.0,,,,
+3.1,penalty_won,AWAY,HOME,35.2,53.0,,,,,offside,
+3.5,error,HOME,,50.2,49.3,,,knock_on,,,
+3.5,carry,HOME,,40.0,52.0,55.0,48.0,,,,
+3.9,carry,HOME,,22.0,12.0,35.0,20.0,,,,
+4.1,kick,AWAY,,60.0,35.0,30.0,30.0,,,,
+4.5,carry,AWAY,,48.0,60.0,33.0,58.0,,,,
+4.5,sin_bin,HOME,,37.8,58.6,,,,,,HOME yellow 4'
+5.0,carry,HOME,,50.0,25.0,66.0,22.0,,,,
+5.3,carry,HOME,,66.0,22.0,80.0,40.0,,,,
+5.3,try,HOME,,75.5,34.2,,,,,,HOME try 5'
+5.9,error,AWAY,,57.8,48.4,,,forward_pass,,,
+5.9,carry,AWAY,,70.0,45.0,52.0,50.0,,,,
+6.2,pass,HOME,,33.0,35.0,20.0,30.0,,,,
+6.5,pass,AWAY,,22.0,25.0,30.1,23.0,,,,
+6.5,penalty_won,HOME,AWAY,30.1,23.0,,,,,,
+6.8,carry,AWAY,,74.0,52.0,65.9,49.3,,,,
+6.8,penalty_won,HOME,AWAY,65.9,49.3,,,,,,
+7.2,carry,HOME,,58.0,16.0,66.1,18.7,,,,
+7.2,penalty_won,AWAY,HOME,66.1,18.7,,,,,,
+7.5,carry,HOME,,40.0,62.0,48.1,59.3,,,,
+7.5,penalty_won,AWAY,HOME,48.1,59.3,,,,,,

@@ -1,0 +1,169 @@
+<mxfile host="phase-trace-docs">
+    <diagram id="recognizer" name="Recognizer pipeline">
+        <mxGraphModel dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1840" pageHeight="1160" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="The recognizer — one mouse drag to a list of classified actions" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="18" width="1000" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Every constant named below is a flat module-level value in tracer/config.py. Nothing in Layers 1 or 2 reads a timestamp: the same shape classifies identically however fast it was drawn, which is what tests/test_pace_invariance.py exists to keep true." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="50" width="1700" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="z1" value="LAYER 1 · BOUNDARY DETECTION — segmentation.py.  Where does one action end and the next begin?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="100" width="1760" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="z2" value="LAYER 2 · CLASSIFICATION — features.py, run once per slice.  What kind of action was it?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="410" width="1760" height="350" as="geometry"/>
+                </mxCell>
+                <mxCell id="z3" value="LAYER 3 · TAP CORRELATION — segmentation.apply_taps().  Keyboard annotations relabel and attribute; they never move a boundary." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#b3b3b3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=13;fontStyle=1;fontColor=#808080;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="810" width="1760" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1a" value="&lt;b&gt;raw path&lt;/b&gt;&#xa;━━━━━&#xa;PathPoint[] {x, y, t}&#xa;pointer samples,&#xa;uneven spacing" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontSize=11;size=14;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1b" value="≥ 3 points, and&#xa;net ≥ 6 px?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1rej" value="rejected — no chain committed&#xa;(dev drawer still logs why)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="270" y="300" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1c" value="&lt;b&gt;_resample()&lt;/b&gt;&#xa;respace uniformly by&#xa;ARC LENGTH, not by time&#xa;&#xa;RESAMPLE_STEP_M = 0.5&#xa;this is where pace stops mattering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1d" value="&lt;b&gt;_smooth()&lt;/b&gt;&#xa;sliding average over&#xa;SMOOTH_WINDOW_PTS = 5&#xa;&#xa;endpoints kept exact, so&#xa;metres gained stay true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1e" value="&lt;b&gt;_measure_turns()&lt;/b&gt;&#xa;per interior point:&#xa;heading change (deg) and&#xa;speed ratio before/after&#xa;&#xa;HEADING_WINDOW_M = 1.5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="940" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1f" value="&lt;b&gt;_evidence_baselines()&lt;/b&gt;&#xa;median angle × 2.0 (floor 8°)&#xa;median ratio × 1.5 (floor 1.2)&#xa;&#xa;the bar is set by THIS path:&#xa;a shaky hand raises its own" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1g" value="&lt;b&gt;_evidence_score()&lt;/b&gt;&#xa;tanh(angle excess) +&#xa;tanh(ratio excess)&#xa;≥ BOUNDARY_ACCEPT = 0.75&#xa;&#xa;either signal alone can clear it" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1380" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1h" value="&lt;b&gt;_pick_boundaries()&lt;/b&gt;&#xa;group within 1.5 m → keep&#xa;the strongest of each run&#xa;drop any within 4 m of an end&#xa;thin to MIN_SEGMENT_M = 4&#xa;&#xa;all spacing in metres of path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1600" y="150" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2a" value="&lt;b&gt;_slice_at()&lt;/b&gt;&#xa;cut the path at each&#xa;boundary index; the&#xa;boundary point belongs&#xa;to both neighbours" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2b" value="&lt;b&gt;features.extract()&lt;/b&gt;&#xa;forward / lateral / net metres,&#xa;path length,&#xa;straightness = net ÷ path&#xa;&#xa;positions only, never t" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2c" value="&lt;b&gt;5 squashed features&lt;/b&gt;&#xa;━━━━━&#xa;backward · lateral&#xa;straight · dist · bent&#xa;each tanh(x / scale),&#xa;rectified where noted" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontSize=11;size=14;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2d" value="&lt;b&gt;PASS evidence&lt;/b&gt;&#xa;backward × 8.0&#xa;lateral × 7.0&#xa;&#xa;each forward metre cancels&#xa;3 m of lateral evidence —&#xa;a pass cannot gain ground" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2e" value="&lt;b&gt;KICK evidence&lt;/b&gt;&#xa;dist × 8.0, straight × 0.5&#xa;bent × −6.0 (veto)&#xa;B_KICK = −6.4 ≈ 27 m&#xa;&#xa;long is not enough:&#xa;a bent 32 m break is a carry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="940" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2f" value="&lt;b&gt;score() → softmax&lt;/b&gt;&#xa;CARRY = 0, the fixed&#xa;reference class&#xa;argmax wins, ties → CARRY&#xa;confidence = top − second" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2g" value="first slice, and&#xa;force_first set?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1380" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2h" value="&lt;b&gt;law overrides geometry&lt;/b&gt;&#xa;action := KICK&#xa;&#xa;kickoff · restart · 22 drop-out&#xa;penalty to touch / at goal&#xa;&#xa;a short-drawn restart read as&#xa;a carry hands the ball back" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1600" y="460" width="200" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2flip" value="&lt;b&gt;_should_flip()&lt;/b&gt; — a KICK hands possession over, so attack direction inverts for every later slice. A forced kick always flips; a geometric one flips only above KICK_FLIP_MIN_CONF = 0.05, so a near-tie cannot silently invert the frame." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+                    <mxGeometry x="1160" y="650" width="640" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3a" value="&lt;b&gt;K / P / R type hint&lt;/b&gt;&#xa;relabels the segment under the cursor at tap time.&#xa;A late tap still lands: TYPE_HINT_GRACE_MS = 250." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="45" y="860" width="330" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3b" value="&lt;b&gt;L — linebreak&lt;/b&gt;&#xa;flags the segment as a linebreak,&#xa;but only if it is a CARRY.&#xa;A pass or a kick cannot break the line." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="860" width="330" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3c" value="&lt;b&gt;digits — player number&lt;/b&gt;&#xa;consecutive taps within DIGIT_BURST_MS = 400&#xa;are one number. The nearest action boundary&#xa;picks the segment; before it = who ended the&#xa;last action, after it = who starts the next." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="755" y="860" width="330" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3d" value="&lt;b&gt;Shift held over a PASS&lt;/b&gt;&#xa;marks it intercepted. That splits the chain:&#xa;the rest of the trace belongs to the other&#xa;team and also logs a turnover_won." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1110" y="860" width="330" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3e" value="&lt;b&gt;Segment[] → PlayChain&lt;/b&gt;&#xa;━━━━━&#xa;action · team · confidence · scores&#xa;players[] · linebreak · intercepted&#xa;flips_possession&#xa;&#xa;→ MatchState._commit_chain()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1465" y="860" width="330" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="dbgnote" value="Every decision above — each candidate's score, the near-miss rejects, why a boundary was dropped, each feature's contribution per class — is recorded in segmentation.last_debug and rendered in the dev drawer (python -m tracer.app 8080 dev, or ?dev=1). That drawer is the only place the recognizer explains itself, and it reports rejected chains too, which is the answer to &quot;why did my trace disappear&quot;." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="1070" width="1740" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1a" target="l1b">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontSize=11;" edge="1" parent="1" source="l1b" target="l1rej">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="l1b" target="l1c">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1c" target="l1d">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1d" target="l1e">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1e" target="l1f">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1f" target="l1g">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l1g" target="l1h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" value="boundary indices" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="l1h" target="l2a">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2a" target="l2b">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2b" target="l2c">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2c" target="l2d">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2d" target="l2e">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2e" target="l2f">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2f" target="l2g">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="l2g" target="l2h">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="l2g" target="l2flip">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l2h" target="l2flip">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e19" value="next slice, in the flipped frame" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#6c8ebf;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="l2flip" target="l2b">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e20" value="all slices classified" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=11;" edge="1" parent="1" source="l2flip" target="l3a">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l3a" target="l3b">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l3b" target="l3c">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l3c" target="l3d">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="l3d" target="l3e">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

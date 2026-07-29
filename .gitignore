@@ -13,3 +13,4 @@ legacy/tagger/dist/
 .pytest_cache/
 .vscode/
 scratch/
+docs/marketing/

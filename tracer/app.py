@@ -20,6 +20,7 @@ from .devpanel import build_dev_panel
 from .events import compute_score
 from .export import export_json
 from . import feedback
+from .legend import build_legend
 from .pitch import pitch_svg
 from .raw_export import export_raw
 from .review import open_review
@@ -114,12 +115,8 @@ def _build_export_row(m):
         ).classes("w-64")
         ui.button("Export data (CSV)",
                   on_click=lambda: _do_data_export(m, data_dir))
-        ui.label("Trace = hold mouse · A/Space = end play · S scrum · "
-                 "F penalty · K/P/R hint (or click a segment) · L break · "
-                 "Shift intercept · digits player · Z/X team · "
-                 "T/N/G/V/B events · C/M conversion · "
-                 "E/W/H knock-on/fwd-pass/handling · Ctrl+Z undo"
-                 ).classes("text-xs text-gray-500")
+        # the key vocabulary used to be crammed onto one line here; it lives in
+        # the legend pane now, generated from config so it cannot drift
 
 
 def _refresh_clock(m, w):
@@ -164,10 +161,12 @@ def _build_match_ui(m, ctx, root, dev):
     root.clear()
     with root:
         w = _build_header(m, partial(_undo, ctx))
-        canvas = TraceCanvas(on_down=m.mouse_down, on_move=m.mouse_move,
-                             on_up=m.mouse_up,
-                             on_segment_click=m.reclassify_segment,
-                             base_svg=markings(m))
+        with ui.row().classes("items-start gap-3 w-full no-wrap"):
+            canvas = TraceCanvas(on_down=m.mouse_down, on_move=m.mouse_move,
+                                 on_up=m.mouse_up,
+                                 on_segment_click=m.reclassify_segment,
+                                 base_svg=markings(m))
+            legend = build_legend(m)
         ctx["canvas"] = canvas
         chips = build_chips(m, canvas.chip_layer)
         _build_export_row(m)
@@ -183,7 +182,7 @@ def _build_match_ui(m, ctx, root, dev):
             ui.notify(m.last_summary, position="top", timeout=2500)
 
     m.on_commit = committed
-    m.on_change = lambda: (save_now(), refresh(), chips.refresh())
+    m.on_change = lambda: (save_now(), refresh(), chips.refresh(), legend.refresh())
     m.on_correction = feedback.log_correction   # log tag corrections for calibrate.py
     # timers must attach to a live slot: begin() runs inside the setup
     # form's click handler, whose slot root.clear() just deleted

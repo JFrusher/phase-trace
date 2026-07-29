@@ -32,6 +32,10 @@ after-the-fact sketch. The line is read from its **geometry** (shape,
 distances, turns), not its drawing speed, so the same trace classifies
 identically however fast you draw it.
 
+A collapsible legend pane sits right of the pitch with both vocabularies —
+line colours and every key — generated from `config.py` and `canvas.py`, so it
+cannot drift from what the app dispatches (`tests/test_legend.py` enforces it).
+
 ## Keys (tap any time during the trace; timing correlates them)
 
 | Key | Meaning |

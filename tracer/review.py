@@ -1,7 +1,9 @@
-"""Optional, non-blocking timeline review/edit — never forced (Decision 12).
+"""Optional, non-blocking timeline review/edit. Nothing here is ever forced.
 
-Open during a stoppage or halftime; correct team, numbers, metres, or delete
-a bad event. Edits mutate match.events in place; autosave picks them up.
+Open it during a stoppage or halftime to correct team, numbers or metres, or
+to delete a bad event. Edits mutate match.events in place and autosave picks
+them up. Nothing blocks the trace: a modal that stops the clock mid-match
+costs more than a wrong tag you can fix at the next stoppage.
 """
 
 from nicegui import ui

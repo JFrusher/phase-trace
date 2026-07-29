@@ -44,7 +44,7 @@ The mechanic, the full hotkey table and the tuning workflow are in [tracer/READM
 
 The recognizer only looks at the shape of the line, never at how fast you drew it. That was deliberate: I wanted to trace off paused or scrubbed video and get the same answer as tracing live. [`tracer/tests/test_pace_invariance.py`](tracer/tests/test_pace_invariance.py) exists to stop that quietly breaking.
 
-Possessions also record how they started (scrum, lineout, penalty, restart, turnover, interception, 22 drop-out), because in rugby that's a fair chunk of what a possession is worth. Most of it comes off the trace: a line crossing the touchline is a lineout, and the kick-to-touch-on-the-full law says where that lineout gets taken. What a line can't show you is a scrum, a penalty, and whether the ball was grounded in the in-goal — the first two are single taps, and the third is a chooser on the chip with the likely answer already picked. Whatever gets inferred turns up as a chip on the pitch, and the chip is also how you correct it. With only two teams to pick from, a wrong guess is one click from right.
+Possessions also record how they started (scrum, lineout, penalty, restart, turnover, interception, 22 drop-out), because in rugby that's a fair chunk of what a possession is worth. Most of it comes off the trace: a line crossing the touchline is a lineout, and the kick-to-touch-on-the-full law says where that lineout gets taken. What a line can't show you is a scrum, a penalty, and whether the ball was grounded in the in-goal. The first two are single taps; the third is a chooser on the chip with the likely answer already picked. Whatever gets inferred turns up as a chip on the pitch, and the chip is also how you correct it — with two teams to pick from, a wrong guess is one click from right.
 
 ## After the match
 
@@ -61,16 +61,15 @@ Every field is optional; a column is blank where nothing was tagged, which is th
 With the optional [RADL](https://github.com/ThatsNoicey/RADL) package installed (`pip install -e
 .[radl]`), the same bundle also gets `radl.csv`: the stream as a published
 [action frame](docs/radl-backend-roadmap.md), validated against RADL's closed vocabularies before it
-is written. RADL is the interchange boundary, not the tracer's in-memory model — `MatchState` holds
+is written. RADL is the interchange boundary, not the tracer's in-memory model. `MatchState` holds
 pixels and chains, which is the right shape for something a mouse is still editing and the wrong
 shape for something an analyst reads.
 
 Open [`report/index.html`](report/) and pick that folder for a pitch map, a Gaussian-KDE heatmap
 (including where a team *conceded* penalties), team and player tables, and a momentum curve. No
-build step, no server, nothing leaves the machine. That curve is reconstructed and approximate —
-[`report/README.md`](report/README.md) says how it differs. Second-half positions fold back into
-the first-half frame, so a heatmap aggregates across the whole match instead of splitting to both
-ends.
+build step, no server, nothing leaves the machine. That curve is reconstructed and approximate;
+[`report/README.md`](report/README.md) says how it differs. Second-half positions fold back into the
+first-half frame, so a heatmap aggregates across the whole match instead of splitting to both ends.
 
 ## The momentum model
 

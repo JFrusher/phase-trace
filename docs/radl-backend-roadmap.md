@@ -11,8 +11,8 @@ deliberate choice, and the thing most likely to be reversed by accident:
 
 - **`MatchState` is a drawing state machine.** Pixels, chains, segments, taps,
   undo snapshots, snap marks, armed penalty options. None of that is RADL and
-  none of it should become RADL — a flat action table is the wrong shape for
-  state that is still being edited by a mouse.
+  none of it should become RADL: a flat action table is the wrong shape for
+  state still being edited by a mouse.
 - **`match.json` is the stable interface.** `radl.phase_trace.read_match` parses
   it as plain JSON and never imports phase-trace. Keep it that way: the coupling
   is one file format, in one direction.
@@ -30,17 +30,18 @@ What the alignment actually changed:
 | `period` | not recorded; RADL guessed from a caller-supplied `halftime_minute` | stamped on every row by `MatchState.period`, advanced by `halftime_flip` |
 | `possession` | not recorded; RADL re-inferred it from team changes | stamped from the team-assigned segments (`MatchState._number_possessions`) |
 | position on a card / conversion | pointer coordinates at the keystroke | not stamped at all (`config.LOCATED_EVENT_TYPES`) |
-| `possession_start_reason` on a mid-chain handover | absent — ~1 possession in 6 could not say how it began | `kick_return` / `interception`, the same names the between-chain case already used (`events.split_reason`) |
+| `possession_start_reason` on a mid-chain handover | absent; ~1 possession in 6 could not say how it began | `kick_return` / `interception`, the same names the between-chain case already used (`events.split_reason`) |
 | vocabularies | duplicated in both repos, nothing checked | held equal by `tracer/tests/test_radl_contract.py` |
-| RADL output | none — RADL had to be run by hand | `radl.csv` written by every export, validated before write |
+| RADL output | none; RADL had to be run by hand | `radl.csv` written by every export, validated before write |
 
 Two of those change momentum values, deliberately. Signed metres are clamped at
-the weight rather than in the data, which leaves the chart identical. But naming
-a mid-chain handover means a sub-chain created by a kick now receives the
-`kick_return` origin factor from `translators/rugby_weights.json`, where it
-previously got the 1.0 default — the same factor the identical handover already
-received when it happened between two chains. `report/momentum.js` reads the
-same field, so the app's chart and the report's reconstruction moved together.
+the weight rather than in the data, which leaves the chart identical. Naming a
+mid-chain handover does move it: a sub-chain created by a kick now receives the
+`kick_return` origin factor from `translators/rugby_weights.json` where it
+previously got the 1.0 default. That is the same factor the identical handover
+already received when it happened between two chains. `report/momentum.js` reads
+the same field, so the app's chart and the report's reconstruction moved
+together.
 
 ## TODO(radl-storage) — a database
 
@@ -56,10 +57,10 @@ CREATE INDEX actions_match_possession ON actions (match_id, possession_id);
   class per action.** A `Action(Base)` declarative model would be a second
   definition of a schema that `radl.config` already owns, and the two would
   drift the same way the vocabularies did before `test_vocab_parity.py`.
-- `freeze_frame` is the one non-scalar column (`object`, per `spec §2.9`). It is
+- `freeze_frame` is the one non-scalar column (`object`, per `spec §2.9`), and
   null everywhere today. When something fills it, store it as JSON in a text
-  column rather than normalising it into a second table — it is a per-row blob
-  by design, not a relation.
+  column rather than normalising it into a second table. It is a per-row blob by
+  design, not a relation.
 - Generate DDL from `radl.config.DTYPES` rather than hand-writing it, so adding
   a column to the spec cannot leave the table behind.
 - Start with SQLite. `tracer/feedback.py` already uses it for the correction
@@ -73,8 +74,8 @@ phase-trace has no API today; the app is NiceGUI talking to an in-process
 - Serve RADL, not `MatchState`. `GET /matches/{id}/actions` returns the frame
   (`frame.to_dict("records")`, or CSV/parquet by `Accept` header). Nothing about
   chains, segments or pixels belongs on the wire.
-- Ingest is `POST /matches` taking a `match.json` payload, and the handler is
-  `radl.phase_trace.convert` — which already validates every closed vocabulary
+- Ingest is `POST /matches` taking a `match.json` payload, handled by
+  `radl.phase_trace.convert`, which already validates every closed vocabulary
   and raises naming the offending row. That is the trust boundary; do not add a
   second, looser one in the route.
 - Do not expose a write endpoint per action. RADL rows are a published record of
@@ -89,8 +90,8 @@ envelope. The action row itself is already typed by `radl.config.DTYPES`, and a
 class. If a model is wanted for the row anyway, generate its fields from
 `radl.config.COLUMNS` / `DTYPES` rather than restating them.
 
-Note the vocabularies are the natural `Enum`s: `ACTION_TYPES`, `RESULTS`,
-`START_REASONS`, `CONTACT_OUTCOMES` — all closed, all already enforced by
+The vocabularies are the natural `Enum`s: `ACTION_TYPES`, `RESULTS`,
+`START_REASONS`, `CONTACT_OUTCOMES`, all closed and all already enforced by
 `radl.phase_trace._one_of`.
 
 ## TODO(radl-vendor) — a second producer
@@ -100,17 +101,16 @@ deserializer layer. RADL's spec says as much (`§7, "One producer"`).
 
 When a second arrives (Opta, Stats Perform, a tracking engine):
 
-- It gets its own module in `radl/`, sibling to `phase_trace.py`, converting
-  the raw feed straight to the action frame. Do **not** route it through
-  phase-trace's `match.json` — that file is phase-trace's export shape, not a
-  neutral intermediate, and treating it as one would make every other producer
+- It gets its own module in `radl/`, sibling to `phase_trace.py`, converting the
+  raw feed straight to the action frame. Do **not** route it through
+  phase-trace's `match.json`. That file is phase-trace's export shape rather than
+  a neutral intermediate, and treating it as one would make every other producer
   inherit phase-trace's quirks.
 - Expect it to be the event that separates "the RADL standard" from "what
-  phase-trace happens to do". `possession_start_reason`, the `sub_type`
-  collapse, and the fixed 100×70 pitch are the three most likely to move.
-- kloppy is the reference for how a multi-provider deserializer layer is
-  organised, if it ever becomes worth one. It is not worth one for a single
-  provider.
+  phase-trace happens to do". `possession_start_reason`, the `sub_type` collapse
+  and the fixed 100×70 pitch are the three most likely to move.
+- kloppy is the reference for organising a multi-provider deserializer layer, if
+  it ever becomes worth one. It is not worth one for a single provider.
 
 ## Known gaps this work did not close
 
@@ -121,6 +121,6 @@ When a second arrives (Opta, Stats Perform, a tracking engine):
 - `sin_bin` has no duration and there is no players-on-field count.
 - A set piece is one row, not a contest.
 
-All four are `radl/docs/spec-v0.2.md §7` limitations, and all four are producer
-limitations rather than schema ones — closing them means tracing more, not
+All four are listed in RADL's `docs/spec-v0.2.md` §7, and all four are producer
+limitations rather than schema ones. Closing them means tracing more, not
 changing the table.

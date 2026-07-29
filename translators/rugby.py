@@ -1,8 +1,9 @@
-"""Rugby union translator -- the sport-agnostic design's proof point.
+"""Rugby union translator.
 
 Football has discrete "shot" events to key off of; rugby largely doesn't --
-threat builds through phase play and territory. Two event shapes are
-therefore handled differently:
+threat builds through phase play and territory. That asymmetry is why
+translate() is a method rather than a weight table: two event shapes are
+handled differently.
 
   - Discrete scores (try, penalty_kick, drop_goal, conversion) map to a
     static weight table, same pattern as football.

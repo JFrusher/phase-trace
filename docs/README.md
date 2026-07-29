@@ -30,8 +30,7 @@ than baked images.
   The `-e` flag embeds the diagram XML in the export, so the exported file stays editable.
 
 No PNG or SVG exports are committed. They would be a second copy of the same information with
-nothing keeping them in step, and the one thing worse than no diagram is a diagram that quietly
-stopped being true.
+nothing keeping them in step, and a diagram that quietly stopped being true is worse than none.
 
 ## Conventions used across all six diagrams
 
@@ -52,7 +51,7 @@ stopped being true.
   see its own [README](../legacy/tagger/README.md) for why it wasn't enough.
 - Per-view internals of `report/` — the viewer has its own [README](../report/README.md), and its
   self-check page (`report/selfcheck.html`) is the executable version of that document.
-- Tuning procedure — [tracer/TUNING.md](../tracer/TUNING.md) covers the symptom→parameter table.
+- Tuning procedure — [tracer/TUNING.md](../tracer/TUNING.md) covers the symptom-to-parameter table.
   Page 6 here covers the *shape* of that loop, not the recipe.
 
 [docs/tracer-dataflow.drawio](tracer-dataflow.drawio) predates this set and covers similar ground

@@ -1,10 +1,13 @@
-"""Synthetic-path fixtures with known ground truth — the project's stop gate.
+"""Single-path segmentation cases with known ground truth.
 
 Paths are built leg by leg at a 60 Hz mousemove rate. Classification reads
 geometry, not speed: a carry is a shorter run, a pass a backward/lateral
 flick, a kick a long straight stroke. Durations only set point timing;
 pace-invariance is pinned separately in test_pace_invariance.py. PX_PER_M
 converts the metre-based leg specs into pixel coordinates.
+
+These cover one path at a time. The full-chain corpus is fixtures.SCENARIOS,
+replayed through a real MatchState by test_corpus.py.
 """
 
 import math

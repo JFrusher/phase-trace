@@ -1,7 +1,10 @@
 """Match/clock/possession orchestration + tap dispatch. Pure (no NiceGUI).
 
-app.py wires UI events in and reads state back; optional callbacks
-(on_commit, on_change) let the UI react without this module importing it.
+app.py wires UI events in and reads state back through three optional
+callbacks — on_commit, on_change, on_correction — so this module never imports
+the UI. An unwired callback is a no-op, which is why the whole test suite and
+every fixture run drive a real MatchState without a browser, and why they
+never write to the feedback database.
 """
 
 import math

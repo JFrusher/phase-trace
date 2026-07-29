@@ -1,28 +1,27 @@
 # Match Report — tracer export viewer
 
-A standalone, no-build web page that reads a tracer **export folder** and turns it into four
-views, styled to match Live Trace's bright-pitch look. No server, no dependencies, no build step —
-open the HTML file in a browser.
+A no-build web page that reads a tracer **export folder** and renders five views, styled to match
+Live Trace. No server, no dependencies, no build step: open the HTML file in a browser.
 
 ## Use
 
 1. Open `report/index.html` in a browser (double-click, or `file://`).
 2. **Choose folder** and pick an `exports/<HOME>_v_<AWAY>/` folder, **Choose files**, or drag-drop
    the folder onto the page.
-3. Explore the four tabs.
+3. Pick a tab.
 
-A ready sample lives in `report/sample/` — pick that folder to see it work.
+`report/sample/` holds a ready export bundle. Pick that folder to see it work.
 
 ## What it reads
 
-`match.json` is the source of truth (self-contained: `meta` + `actions` + `summary`). If it's absent,
-the page falls back to `actions.csv` + `team.csv` + `players.csv`. Parsing is 100% client-side —
-nothing leaves the machine. Positions now ride on the actions stream (see "positions" below), so the
-heatmap works straight from `match.json`.
+`match.json` first: it is self-contained (`meta` + `actions` + `summary`). If it is absent the page
+falls back to `actions.csv` + `team.csv` + `players.csv`. All parsing is client-side; nothing leaves
+the machine. Positions ride on the actions stream (see [Positions](#positions)), so the heatmap
+works straight from `match.json`.
 
 An export folder may also contain `radl.csv`, the same stream as a
-[RADL](https://github.com/ThatsNoicey/RADL) action frame. This page ignores it — it is the
-interchange format for analysis elsewhere, not another thing to render.
+[RADL](https://github.com/ThatsNoicey/RADL) action frame. This page ignores it. RADL is the
+interchange format for analysis elsewhere.
 
 ## The five views
 
@@ -30,37 +29,40 @@ interchange format for analysis elsewhere, not another thing to render.
   coloured amber / blue / red (intercepts dashed). Toggle by team and action type. Records without
   coordinates (set pieces, scores) aren't drawn but still count in the stats.
 - **Heatmap** — a Gaussian KDE of any located metric over the pitch. Pick the metric (all actions,
-  carries/passes/kicks, linebreaks, or the discrete events — tries, **penalties won**, **penalties
-  conceded**, turnovers, errors, cards, set pieces), filter by team, and drag the blur (bandwidth)
-  slider. Penalties conceded is the discipline map: pick a team to see every spot **they** gave a
-  penalty away (attributed via the `conceded_by` field the tracer stores). **Single** mode shades in
-  one team's hue (transparent → saturated); **Differential** mode diverges home (red) ↔ away (blue)
-  with a neutral midpoint, so you see which side owned each zone. Lines are sampled along their whole
-  path; discrete events plot at their captured point.
-- **Team** — home-vs-away mirrored comparison from `summary.team`, plus penalty-reason / error-kind
-  breakdowns when present.
-- **Players** — per-player table from `summary.players` (sortable). Shows an empty-state when jersey
-  numbers weren't tagged during capture (common).
+  carries/passes/kicks, linebreaks, or the discrete events: tries, penalties won, penalties conceded,
+  turnovers, errors, cards, set pieces), filter by team, and drag the bandwidth slider. **Single**
+  mode shades in one team's hue; **Differential** diverges home (red) to away (blue) about a neutral
+  midpoint. Lines are sampled along their whole path; discrete events plot at their captured point.
+  Penalties conceded is the discipline map — it reads the `conceded_by` field, so picking a team
+  shows where **they** gave penalties away rather than where they won them.
+- **Team** — home-vs-away mirrored comparison of `summary.team`: possession count, metres, action
+  tallies, discipline, plus penalty-reason and error-kind breakdowns where they were tagged. The
+  tracer computes this at export time (`raw_export.team_summary`) and the page only renders it, so
+  the tab and the CSVs cannot disagree.
+- **Players** — sortable per-player table from `summary.players`, keyed on jersey number. Rows only
+  exist for numbers tapped during capture, so an untagged match shows an empty state. That is the
+  common case: tagging numbers live is optional and most traces skip it.
 - **Momentum** — a mirrored area curve reconstructed from the action stream. See the caveat below.
 
 ## Momentum is reconstructed (approximate)
 
-The raw export drops the `phase_sequence` events the official momentum engine keys off, so this page
-rebuilds possession phases by grouping consecutive same-team actions and derives a territory weight
-the same way [`translators/rugby.py`](../translators/rugby.py) `_territory_weight` does, then runs the
-same exp-decay + Gaussian-smoothing math as [`core/engine.py`](../core/engine.py). Two known gaps:
+The raw export drops the `phase_sequence` events the momentum engine keys off, so this page rebuilds
+possession phases by grouping consecutive same-team actions, derives a territory weight the way
+[`translators/rugby.py`](../translators/rugby.py) `_territory_weight` does, then runs the same
+exp-decay and Gaussian smoothing as [`core/engine.py`](../core/engine.py). Two known gaps:
 
-- **origin_factor is fixed at 1.0** — `start_reason` isn't in the raw export, so an interception and a
-  scrum-fed phase are weighted the same. This is an approximation, not a reproduction of the official
-  curve.
-- **x-axis** uses match minute when timestamps span time; when the clock was never started (every
-  `minute` is `0.0`, common in quick captures) it falls back to **possession sequence**, labelled as
-  such on the chart.
+- **origin_factor is fixed at 1.0.** `start_reason` isn't in the raw export, so an interception and a
+  scrum-fed phase carry the same weight.
+- **x-axis** uses match minute when timestamps span time. When the clock was never started (every
+  `minute` is `0.0`, common in quick captures) it falls back to possession sequence, labelled as such
+  on the chart.
+
+Read the curve as approximate. `momentum.py` produces the authoritative one.
 
 ## Self-check
 
-Open `report/selfcheck.html` — it runs assertions for the territory weight, the Gaussian blur, the
-metre→pixel mapping, and the momentum timebase fallback, and prints PASS/FAIL. All should pass.
+Open `report/selfcheck.html`. It asserts the territory weight, the Gaussian blur, the metre-to-pixel
+mapping and the momentum timebase fallback, and prints PASS/FAIL. All should pass.
 
 ## Files
 
@@ -74,24 +76,23 @@ metre→pixel mapping, and the momentum timebase fallback, and prints PASS/FAIL.
 | `heatmap.js` | Gaussian KDE (bin → blur → colormap) for the heatmap |
 | `views.js` | Match header, pitch map, heatmap, team comparison, player table, momentum chart |
 | `selfcheck.html` | In-browser assertions |
-| `sample/` | A real export bundle to test against — regenerated by RADL's `tools/make_synthetic_match.py <phase-trace> report/sample` |
+| `sample/` | A real export bundle to test against. Regenerate with RADL's `tools/make_synthetic_match.py <phase-trace> report/sample` |
 
 ## Positions
 
-Every located thing carries a pitch position. Carries/passes/kicks always had `start`/`end`
-coordinates; the tracer also stamps discrete events (tries, penalties, turnovers, errors, set
-pieces) with an `x_m`/`y_m` from where the ball was when they were tapped. The export writes a
-`positions.csv` (one row per located thing) alongside the other files, and the same positions ride on
-`match.json`'s action stream — which is what the heatmap consumes.
+Carries, passes and kicks have always carried `start`/`end` coordinates. The tracer also stamps
+discrete events (tries, penalties, turnovers, errors, set pieces) with an `x_m`/`y_m` taken from
+where the ball was when the key was tapped. Both land in `positions.csv` and on `match.json`'s
+action stream, which is what the heatmap consumes.
 
 **Cards and conversions carry no position, deliberately.** A sin bin or a conversion is logged by a
-keystroke, so "where the ball was" is wherever the pointer had drifted to — pointer noise, not a
-location of anything, and it used to reach the heatmap as if it were data. The list of types that
-do get a position is `tracer/config.py`'s `LOCATED_EVENT_TYPES`.
+keystroke well after the ball has moved on, so "where the ball was" is wherever the pointer had
+drifted to. That is pointer noise, and it used to reach the heatmap as if it were data.
+`tracer/config.py`'s `LOCATED_EVENT_TYPES` is the list of types that do get a position.
 
 ## Period and possession
 
 Every row also carries `period` (1, 2, and on into extra time) and `possession` (a running id from
-1). Both are recorded by the tracer rather than re-derived here: halftime swaps ends and the export
-folds that swap away, so nothing downstream can recover the half from the coordinates, and the
-tracer knows where a possession ended because its segments were assigned to teams before export.
+1). The tracer records both; the page never re-derives them. Halftime swaps ends and the export
+folds that swap away, so nothing downstream can recover the half from the coordinates. Possession
+boundaries are exact for the same reason — segments are assigned to teams before export.

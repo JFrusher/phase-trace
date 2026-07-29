@@ -23,8 +23,8 @@ m.on_correction = feedback.log_correction
 
 That inversion is load-bearing. It's why `fixtures.py` can drive a real `MatchState` with synthetic
 pointer input and get behaviour identical to the live app, and why every test in `tracer/tests/`
-runs without a browser. A callback that nobody wires is simply a no-op — which is also why tests
-never write to the feedback database.
+runs without a browser. An unwired callback is a no-op, which is also why tests never write to the
+feedback database.
 
 ## Page 1 — the state machine
 
@@ -36,8 +36,8 @@ target dot on the pitch, and `armed_next_action` may be set by a penalty option 
 **Recording.** `ChainRecorder` accumulates `PathPoint`s; `KeyState` appends timestamped taps and
 Shift intervals.
 
-**Segmenting.** `segment_path()` then `apply_taps()`. If the path is rejected — fewer than three
-points, or under `MIN_MOVEMENT_PX` — nothing commits and you go straight back to *Awaiting press*.
+**Segmenting.** `segment_path()` then `apply_taps()`. A rejected path — fewer than three points, or
+under `MIN_MOVEMENT_PX` — commits nothing and goes straight back to *Awaiting press*.
 
 **Committed.** `_commit_chain()` runs team assignment, score resolution, origin inference and both
 output streams, then fires the callbacks.
@@ -50,19 +50,19 @@ output streams, then fires the callbacks.
 spot a turnover happened, the centre spot for a restart — and if it snaps, it shifts **the entire
 path** onto that mark, not only the first point.
 
-That's the subtle bit. Moving the start alone would turn the gap between the mark and a sloppy
-press into a leg of its own, and Layer 1 would faithfully detect a boundary there and emit a
-phantom action. Shifting the whole path preserves its shape exactly.
+That's the subtle bit. Moving the start alone would turn the gap between the mark and a sloppy press
+into a leg of its own, and Layer 1 would faithfully detect a boundary there and emit a phantom
+action. Shifting the whole path preserves its shape exactly.
 
-Two snapping rules, because two kinds of mark:
+Two kinds of mark, so two snapping rules:
 
-- **Centre-spot restarts** (`kickoff`, `restart`) are a hard law — the ball is on the spot however
-  you press — so they always snap.
-- **Positional marks** (lineout, scrum, turnover, penalty) are only *inferred*, so they snap only
-  within `SNAP_TOLERANCE_M = 10.0`. A press further out is taken at face value as a deliberate free
-  start, so one wild click can't drag a whole trace onto a wrong guess.
+- **Centre-spot restarts** (`kickoff`, `restart`) always snap. The ball is on the spot however you
+  press; that is law, not inference.
+- **Positional marks** (lineout, scrum, turnover, penalty) are inferred, so they snap only within
+  `SNAP_TOLERANCE_M = 10.0`. A press further out is taken at face value as a deliberate free start,
+  so one wild click can't drag a whole trace onto a wrong guess.
 
-`mouse_down` returns the point it actually recorded, and the canvas draws from that — so the drawn
+`mouse_down` returns the point it actually recorded and the canvas draws from that, so the drawn
 line and the recorded data can never disagree about where play began.
 
 ### What ends a chain
@@ -71,40 +71,39 @@ Four ways, and the ordering of authority matters:
 
 1. **`A` or `Space`** — the authoritative signal. The play died: tackle, ruck, whistle.
 2. **`S` or `F`** — also ends it, and additionally records a scrum or a penalty.
-3. **The traced line leaving the field** — `_left_field()` fires mid-`mouse_move`. In law the play
-   is already over, so keep drawing straight out and the lineout or drop-out lands without a tap.
+3. **The traced line leaving the field.** `_left_field()` fires mid-`mouse_move`. In law the play is
+   already over, so keep drawing straight out and the lineout or drop-out lands without a tap.
 4. **Mouse-up** — a defensive fallback only.
 
-Releasing the button being the *fallback* rather than the signal is the core mechanic: it's what
-lets one continuous drag cover pass-run-pass-tackle without you having to decide mid-play where the
+Releasing the button being the fallback rather than the signal is the core mechanic. It's what lets
+one continuous drag cover pass-run-pass-tackle without you having to decide mid-play where the
 actions divide.
 
-`_left_field()` deliberately tests *crossing*, not proximity — a winger runs inside the touch margin
-all game without going out — and is guarded by the same displacement floor `segment_path()` uses,
-so a trace started on a line can't end itself before it has drawn anything.
+`_left_field()` tests *crossing*, not proximity, because a winger runs inside the touch margin all
+game without going out. It is guarded by the same displacement floor `segment_path()` uses, so a
+trace started on a line can't end itself before it has drawn anything.
 
 ### Two snapshots, taken at different moments
 
 This is the detail most likely to bite someone changing this file, and it's called out in a note on
 the diagram.
 
-**`_undo`** is taken at `mouse_down`. Not at commit — because taps landing mid-trace (a `T` for a
-try, a `V` for a turnover) have already mutated `events` and `possession` by the time the chain
-commits. Undo has to take those back too, so the snapshot must predate them.
+**`_undo`** is taken at `mouse_down`, not at commit. Taps landing mid-trace (a `T` for a try, a `V`
+for a turnover) have already mutated `events` and `possession` by the time the chain commits. Undo
+has to take those back too, so the snapshot must predate them.
 
-**`_precommit`** is taken at commit. `_undo` is no use for re-classification, because
-re-classifying happens via a **click**, and a click is itself a `mouse_down` — which overwrites
-`_undo` with post-commit state before the handler ever runs.
+**`_precommit`** is taken at commit. `_undo` is no use for re-classification, because re-classifying
+happens via a click, and a click is itself a `mouse_down`, which overwrites `_undo` with post-commit
+state before the handler ever runs.
 
 ### Corrections rewind and replay; they never patch
 
 `reclassify_segment(i)` cycles a segment's action and then re-runs the entire commit over the same
 points. It does not edit the emitted events.
 
-That's the right call rather than the lazy one. Changing an action can flip possession, split the
-chain differently, change which sub-chains exist, change the inferred origin, change the score, and
-change where the next press snaps to. Recomputing is both shorter than patching and the only
-version that's correct.
+Recomputing is both shorter than patching and the only version that stays correct. Changing an
+action can flip possession, split the chain differently, change which sub-chains exist, change the
+inferred origin, change the score, and change where the next press snaps to.
 
 The same applies to `choose_in_goal_outcome()`: switching away from a try has to un-log the try
 event, take its five points back, and undo the restart it triggered. Replaying is the only way that
@@ -129,26 +128,26 @@ pure functions called into and returned from; they never call back.
 
 **`assign_teams` and `infer_origin` are separate calls with different jobs.** The first walks the
 chain deciding who held the ball for each segment (a KICK hands over, an intercepted PASS hands
-over). The second reads how the chain *ended* to decide how the next one *begins* — that's page 4's
+over). The second reads how the chain *ended* to decide how the next one *begins*, which is page 4's
 whole subject.
 
 **Both output streams are written in the same pass.** `chain_to_events()` collapses same-team runs
-into `phase_sequence` records for the momentum path; `chain_to_actions()` keeps every segment as
-its own row for analysis. Page 5 covers why.
+into `phase_sequence` records for the momentum path; `chain_to_actions()` keeps every segment as its
+own row for analysis. Page 5 covers why.
 
 ### The timestamp caveat
 
 `canvas.py` stamps timestamps server-side on event arrival, because the browser's
 `MouseEventArguments` carries no client clock. On localhost that's fine. Over a WAN, latency jitter
-would degrade tap correlation — which is the one place in the whole recognizer where timing still
-matters, since Layers 1 and 2 never read a timestamp at all.
+would degrade tap correlation. That is the one place in the whole recognizer where timing still
+matters — Layers 1 and 2 never read a timestamp at all.
 
 ## Trade-offs
 
 **No formal state machine object.** `pending_start_reason` and `armed_next_action` are two nullable
-fields, with a comment in the source explicitly noting this is *not* a state machine so that
+fields, with a comment in the source noting this is deliberately not a state machine, so that
 nothing can get stuck in an unreachable state. The diagram draws a state machine because that's the
-clearest way to *explain* it, not because one is implemented.
+clearest way to explain it, not because one is implemented.
 
 **Per-connection state, built inside the page closure.** Module-level state would let two browser
 tabs, or a reload, corrupt each other's match. `reload=False` on `ui.run()` is for the same reason
@@ -156,4 +155,4 @@ and is called non-negotiable in the source: dev auto-reload restarts the process
 in-memory match state.
 
 **Nothing blocks.** Every chooser is pre-selected on the guess; ignoring it accepts that guess. A
-modal that stops the clock during a match is worse than a wrong guess you can fix in one click.
+modal that stops the clock during a match costs more than a wrong guess you can fix in one click.

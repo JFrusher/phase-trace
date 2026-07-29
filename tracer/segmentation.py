@@ -4,11 +4,17 @@ Splits one continuous traced path into segments at geometric boundaries
 (sharp heading changes, sudden speed changes), then classifies each as
 CARRY/PASS/KICK:
 
-  - PASS: net displacement backward or predominantly lateral — a forward
-    pass is illegal in rugby, so this is the one reliable signal.
-  - KICK: long, straight stroke, optionally flicked faster than the trace's
-    own pace. Read from geometry — no assumption about tracing speed.
-  - CARRY: everything else (the deliberate default — Decision 12).
+  - PASS: net displacement backward or predominantly lateral. A forward pass
+    is illegal in rugby, so this is the one reliable signal.
+  - KICK: long AND straight. Distance alone is not enough — a long bent run
+    is a break, not a kick, and `bent` vetoes it (features.py).
+  - CARRY: everything else, and the deliberate default. CARRY is the fixed
+    reference class scoring 0, and ties go to it, so ambiguity always lands
+    on the answer that does not flip possession.
+
+Nothing here reads a timestamp. Classification is geometry only, so the same
+shape classifies identically however fast it was drawn; tests/test_pace_
+invariance.py is the fence around that.
 
 Attack direction flips after every KICK segment: the receiver attacks the
 other way, so their onward carry must not read as "backward = pass".
@@ -289,7 +295,7 @@ def _digit_bursts(taps):
 
 
 def _apply_type_hint(segments, tap, t0, grace, log):
-    """K/P/R tap: relabel the segment under the cursor (Decision 10 — never split)."""
+    """K/P/R tap: relabel the segment under the cursor. Never splits one."""
     seg = _segment_at(segments, tap.t, grace)
     if seg is None:
         log.append(f"{tap.t - t0:.2f}s '{tap.key}' hint -> "
@@ -325,7 +331,7 @@ def _tag_target(segments, b, t):
 
 
 def _apply_player_numbers(segments, taps, t0, log):
-    """Player numbers: nearest boundary decides segment and role (Decision 11)."""
+    """Player numbers: the nearest boundary decides both segment and role."""
     boundaries = [segments[0].start_t] + [s.end_t for s in segments]
     for number, t in _digit_bursts(taps):
         b = min(boundaries, key=lambda bt: abs(bt - t))
@@ -357,9 +363,10 @@ def _mark_intercepts(segments, shift_intervals, t0, log):
 def apply_taps(segments: list[Segment], taps, shift_intervals) -> list[Segment]:
     """Layer keyboard annotations onto geometrically-detected segments.
 
-    Taps never move boundaries (Decision 10) — they relabel, flag, and
-    attribute. Unrecognized keys in the log are ignored, so callers can feed
-    the whole per-chain tap log straight in.
+    Taps never move a boundary; they relabel, flag and attribute. That keeps
+    segmentation deterministic on the geometry alone, so a mistimed tap
+    degrades one label rather than restructuring the chain. Unrecognized keys
+    are ignored, so callers can feed the whole per-chain tap log straight in.
     """
     if not segments:
         return segments

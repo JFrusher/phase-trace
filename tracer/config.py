@@ -1,9 +1,14 @@
 """All tunable constants for the tracer, in one place.
 
-Segmentation thresholds are empirical: tuned against the synthetic fixtures
-in tests/test_segmentation.py, expected to be re-tuned against real
-hand-traced data. Units are metres/seconds where physical, milliseconds
-where they name a *_MS window, degrees for angles.
+Every recognizer threshold and weight is empirical, tuned against the 39
+synthetic scenarios in fixtures.py (replayed by tests/test_corpus.py) plus the
+narrower path cases in tests/test_segmentation.py. None of it has been tuned
+against a real hand-traced match; TUNING.md has the loop for that, and no tool
+in this repo writes this file.
+
+Units are metres/seconds where physical, milliseconds where a name ends *_MS,
+degrees for angles. Nothing the classifier reads may be a time or a speed
+(test_pace_invariance.py enforces it).
 """
 
 # --- pitch / calibration -------------------------------------------------

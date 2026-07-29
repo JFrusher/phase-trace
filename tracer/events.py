@@ -316,10 +316,10 @@ def _turnover_event(sub, team_names, cal, flip, minute_at) -> dict:
 def actor(segment) -> int | None:
     """Jersey number of the player who performed this action, or None.
 
-    A digit tapped just after a boundary lands as role="start" on the segment
-    (the actor starting it, apply_taps Decision 11); prefer that, else fall
-    back to any tag present. Absent when nothing was tapped — the data model
-    tolerates missing pieces.
+    A digit tapped just after a boundary lands as role="start" on the segment,
+    naming whoever starts that action (see segmentation.apply_taps), so prefer
+    it and fall back to any tag present. None when nothing was tapped; the data
+    model tolerates missing pieces.
     """
     starts = [p for p in segment.players if p.role == "start"]
     tag = starts[0] if starts else (segment.players[0] if segment.players else None)

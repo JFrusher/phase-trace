@@ -7,10 +7,12 @@ winning action, and a confidence margin. CARRY is the fixed reference class
 
 Every feature is PURELY SPATIAL — computed from point positions only, never
 from timestamps. The time taken to draw the line is not measured and plays no
-part in classification (a user varies drawing speed freely). Rugby law drives
-the shape of the features: a pass cannot gain forward ground, so forward
-progress vetoes the lateral/backward PASS evidence; a kick is simply a long,
-straight stroke.
+part in classification (a user varies drawing speed freely).
+
+Both classes are defined by a veto as much as by evidence. A pass cannot gain
+forward ground, so forward progress vetoes the lateral/backward PASS evidence.
+A kick must be straight as well as long, so `bent` vetoes KICK — without it a
+32m running break clears the distance bias and wrongly flips possession.
 
 Weights/biases/scales are flat constants in config.py, read via getattr at
 call time so sweep.py and fit.py setattr take effect without reimport.

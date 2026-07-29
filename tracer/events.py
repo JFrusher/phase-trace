@@ -232,9 +232,9 @@ def chain_to_events(chain, team_names: dict, attack_dir_home: int,
     out = []
     for i, sub in enumerate(subs):
         ev = _phase_event(sub, team_names, attack_dir_home, cal, minute_at)
-        if i == 0:
-            # origin keys precede players so the exported key order is stable
-            _add_origin(ev, sub, attack_dir_home, cal, start_reason)
+        # origin keys precede players so the exported key order is stable
+        reason = start_reason if i == 0 else split_reason(subs[i - 1][-1])
+        _add_origin(ev, sub, attack_dir_home, cal, reason)
         players = [{"number": p.number, "role": p.role}
                    for s in sub for p in s.players]
         if players:
@@ -272,12 +272,26 @@ def _phase_event(sub, team_names, attack_dir_home, cal, minute_at) -> dict:
     }
 
 
-def _add_origin(ev, sub, attack_dir_home, cal, start_reason):
-    """Name where the first sub-chain began (mutates ev in place).
+def split_reason(prev_seg) -> str:
+    """Why the ball changed hands mid-chain, as a start reason for what follows.
 
-    Only the first sub-chain has an origin worth naming: later ones exist
-    because a kick or interception split this chain, which is already recorded
-    in the segment that did it.
+    assign_teams flips possession on exactly two things — a kick that hands
+    over, and an intercepted pass — so those are the only two answers, and both
+    are the same names infer_origin gives a chain that ENDED that way. Reading
+    the same event as one reason between chains and no reason within one was the
+    whole bug: a possession that began off an opposition kick is a kick return
+    however the tracer happened to bundle it.
+    """
+    return ("interception" if prev_seg.action == "PASS" and prev_seg.intercepted
+            else "kick_return")
+
+
+def _add_origin(ev, sub, attack_dir_home, cal, start_reason):
+    """Name where this sub-chain began (mutates ev in place).
+
+    `start_reason` is the caller's: the chain's own origin for the first
+    sub-chain, and split_reason(...) for the ones a kick or interception
+    created.
     """
     team = sub[0].team
     attack_dir = attack_dir_home if team == "home" else -attack_dir_home
@@ -362,7 +376,7 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
         return round(chain.start_minute + (t - t0) / 60, 1)
 
     out = []
-    for seg in chain.segments:
+    for i, seg in enumerate(chain.segments):
         attack_dir = attack_dir_home if seg.team == "home" else -attack_dir_home
         start_pt, end_pt = seg.points[0], seg.points[-1]
         sx, sy = canonical_xy(cal.field_x_m(start_pt.x), cal.field_y_m(start_pt.y), flip)
@@ -387,6 +401,13 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
         player = actor(seg)
         if player is not None:
             ev["player"] = player
+        # a kick or an interception hands the ball over inside a single chain,
+        # which starts a possession just as much as one between chains does.
+        # Naming it here is what lets match_state number the possession AND
+        # gives the row an origin; without it, ~1 possession in 6 reached RADL
+        # unable to say how it began.
+        if i and seg.team != chain.segments[i - 1].team:
+            ev["start_reason"] = split_reason(chain.segments[i - 1])
         out.append(ev)
     if out and start_reason:
         out[0]["start_reason"] = start_reason

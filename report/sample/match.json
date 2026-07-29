@@ -319,6 +319,7 @@
    "end_x_m": 40.9,
    "end_y_m": 42.9,
    "attack_dir": 1,
+   "start_reason": "kick_return",
    "period": 1,
    "possession": 7
   },
@@ -377,6 +378,7 @@
    "end_x_m": 21.2,
    "end_y_m": 43.1,
    "attack_dir": -1,
+   "start_reason": "interception",
    "period": 1,
    "possession": 9
   },
@@ -451,6 +453,7 @@
    "end_x_m": 70.9,
    "end_y_m": 42.7,
    "attack_dir": 1,
+   "start_reason": "kick_return",
    "period": 1,
    "possession": 12
   },
@@ -513,6 +516,7 @@
    "end_x_m": 40.9,
    "end_y_m": 42.9,
    "attack_dir": 1,
+   "start_reason": "kick_return",
    "period": 1,
    "possession": 14
   },
@@ -762,6 +766,7 @@
    "end_x_m": 90.9,
    "end_y_m": 27.3,
    "attack_dir": 1,
+   "start_reason": "kick_return",
    "period": 2,
    "possession": 20
   },
@@ -1074,6 +1079,7 @@
    "end_x_m": 59.1,
    "end_y_m": 27.1,
    "attack_dir": -1,
+   "start_reason": "kick_return",
    "period": 2,
    "possession": 27
   },

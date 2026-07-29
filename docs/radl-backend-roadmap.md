@@ -30,8 +30,17 @@ What the alignment actually changed:
 | `period` | not recorded; RADL guessed from a caller-supplied `halftime_minute` | stamped on every row by `MatchState.period`, advanced by `halftime_flip` |
 | `possession` | not recorded; RADL re-inferred it from team changes | stamped from the team-assigned segments (`MatchState._number_possessions`) |
 | position on a card / conversion | pointer coordinates at the keystroke | not stamped at all (`config.LOCATED_EVENT_TYPES`) |
-| vocabularies | duplicated in both repos, nothing checked | held equal by `tracer/tests/test_vocab_parity.py` |
+| `possession_start_reason` on a mid-chain handover | absent — ~1 possession in 6 could not say how it began | `kick_return` / `interception`, the same names the between-chain case already used (`events.split_reason`) |
+| vocabularies | duplicated in both repos, nothing checked | held equal by `tracer/tests/test_radl_contract.py` |
 | RADL output | none — RADL had to be run by hand | `radl.csv` written by every export, validated before write |
+
+Two of those change momentum values, deliberately. Signed metres are clamped at
+the weight rather than in the data, which leaves the chart identical. But naming
+a mid-chain handover means a sub-chain created by a kick now receives the
+`kick_return` origin factor from `translators/rugby_weights.json`, where it
+previously got the 1.0 default — the same factor the identical handover already
+received when it happened between two chains. `report/momentum.js` reads the
+same field, so the app's chart and the report's reconstruction moved together.
 
 ## TODO(radl-storage) — a database
 

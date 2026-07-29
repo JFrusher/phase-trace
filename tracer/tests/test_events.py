@@ -186,14 +186,28 @@ def test_first_sub_chain_carries_the_origin_and_its_field_position():
     assert evs[0]["start_metres_from_line"] == 80.0
 
 
-def test_only_the_first_sub_chain_carries_the_origin():
-    # the kick splits possession; the second sub-chain's origin is already
-    # implied by the kick that created it
+def test_a_kick_split_names_the_possession_it_started():
+    """A sub-chain is a possession, and it began off the opposition's kick.
+
+    That is a kick return whether the tracer bundled it into this chain or the
+    next one, and the two used to disagree: a chain that ENDED on a kick handed
+    the next one `kick_return`, while a kick mid-chain left the run it created
+    with no origin at all.
+    """
     chain = make_chain([seg("KICK", 20, 60, 0.0, 1.0),
                         seg("CARRY", 60, 70, 1.0, 3.0)], team="home")
     evs = chain_to_events(chain, NAMES, attack_dir_home=1, start_reason="scrum")
     assert evs[0]["start_reason"] == "scrum"
-    assert "start_reason" not in evs[1]
+    assert evs[1]["start_reason"] == "kick_return"
+
+
+def test_an_interception_split_names_the_possession_it_started():
+    chain = make_chain([seg("PASS", 40, 38, 0.0, 0.5, intercepted=True),
+                        seg("CARRY", 38, 30, 0.5, 2.0)], team="home")
+    evs = chain_to_events(chain, NAMES, attack_dir_home=1, start_reason="lineout")
+    # an interception also logs turnover_won between the two sub-chains
+    phases = [e for e in evs if e["type"] == "phase_sequence"]
+    assert [e["start_reason"] for e in phases] == ["lineout", "interception"]
 
 
 def test_origin_is_omitted_when_there_is_none():

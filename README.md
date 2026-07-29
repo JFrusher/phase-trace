@@ -110,7 +110,7 @@ Diagrams for each layer, with the reasoning and the trade-offs behind them, are 
 
 ## Tests
 
-355 tests, run on every push and pull request:
+358 tests, run on every push and pull request:
 
 ```bash
 python -m pytest -q

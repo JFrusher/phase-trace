@@ -85,13 +85,37 @@ def test_kick_attributes_to_kicking_team_receiver_to_other():
     assert acts[2]["team"] == "WAL"
 
 
-def test_start_reason_stamped_on_first_action_only():
+def test_start_reason_stamped_on_the_first_action_of_a_possession():
     acts = chain_to_actions(make_chain([
         seg("CARRY", 10, 20, 100.0, 102.5),
         seg("CARRY", 20, 30, 102.5, 104.0),
     ]), NAMES, attack_dir_home=1, start_reason="lineout")
     assert acts[0]["start_reason"] == "lineout"
-    assert "start_reason" not in acts[1]
+    assert "start_reason" not in acts[1]   # same possession, same team
+
+
+def test_a_kick_inside_a_chain_names_the_possession_it_started():
+    """A handover mid-chain begins a possession as much as one between chains.
+
+    Both used to be treated differently: a chain that ENDED on a kick handed the
+    next one `kick_return`, while a kick in the middle of one left the receiving
+    run with no origin at all — about one possession in six reaching the export
+    unable to say how it began.
+    """
+    acts = chain_to_actions(make_chain([
+        seg("KICK", 20, 60, 100.0, 101.0),
+        seg("CARRY", 60, 70, 101.0, 103.0),
+    ]), NAMES, attack_dir_home=1, start_reason="scrum")
+    assert [a["start_reason"] for a in acts] == ["scrum", "kick_return"]
+    assert acts[0]["team"] != acts[1]["team"]
+
+
+def test_an_interception_inside_a_chain_names_the_possession_it_started():
+    acts = chain_to_actions(make_chain([
+        seg("PASS", 40, 38, 100.0, 100.5, intercepted=True),
+        seg("CARRY", 38, 30, 100.5, 102.0),
+    ]), NAMES, attack_dir_home=1, start_reason="lineout")
+    assert [a["start_reason"] for a in acts] == ["lineout", "interception"]
 
 
 def test_start_reason_absent_when_not_given():

@@ -19,3 +19,23 @@ jobs:
       # config, so the recognizer is gated here too. tracer.sweep is a tuning
       # report that always exits 0 — running it in CI would prove nothing.
       - run: python -m pytest -q
+
+  # The vocabulary parity and round-trip checks in test_radl_contract.py
+  # importorskip on `radl`, so the job above skips all of them. Without this
+  # job the checks CONTRIBUTING calls "the only thing standing between a new
+  # event type and a corpus that silently disagrees with the published
+  # standard" would never actually run.
+  radl-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ThatsNoicey/RADL
+          path: RADL
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev]" -e ./RADL
+      - run: python -m pytest -q tracer/tests/test_radl_contract.py

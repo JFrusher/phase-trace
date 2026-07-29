@@ -17,6 +17,7 @@ Two halves:
 import csv
 import json
 
+import pandas as pd
 import pytest
 
 from tracer import config, fixtures
@@ -30,11 +31,12 @@ radl = pytest.importorskip("radl",
 
 # --- vocabulary parity ------------------------------------------------------
 def test_start_reasons_match_radl():
-    assert list(config.START_REASONS) == list(radl.config.START_REASONS)
+    assert sorted(config.START_REASONS) == sorted(radl.config.START_REASONS)
 
 
 def test_located_event_types_match_radl():
-    assert list(config.LOCATED_EVENT_TYPES) == list(radl.config.LOCATED_EVENT_TYPES)
+    assert sorted(config.LOCATED_EVENT_TYPES) == sorted(
+        radl.config.LOCATED_EVENT_TYPES)
 
 
 def test_points_match_radl():
@@ -48,7 +50,8 @@ def test_pitch_dimensions_match_radl():
 
 
 def test_penalty_reasons_are_a_radl_sub_type():
-    assert list(config.PENALTY_REASONS) == radl.config.SUB_TYPES["penalty_won"]
+    assert sorted(config.PENALTY_REASONS) == sorted(
+        radl.config.SUB_TYPES["penalty_won"])
 
 
 def test_error_kinds_are_a_radl_sub_type():
@@ -73,6 +76,24 @@ def test_every_type_phase_trace_can_log_is_a_radl_action_type():
         assert etype in radl.config.ACTION_TYPES, etype
 
 
+def test_every_contact_outcome_phase_trace_can_state_is_a_radl_one():
+    """Only held_up today. The rest of RADL's vocabulary stays unproduced because
+    nothing in a top-down line states that a ruck or maul formed at all -- see
+    _emit_chain. This is the guard for when that changes."""
+    emitted = {o for o in config.IN_GOAL_OUTCOMES
+               if o in radl.config.CONTACT_OUTCOMES}
+    assert emitted == {"held_up"}
+    for outcome in emitted:
+        assert outcome in radl.config.CONTACT_OUTCOMES
+
+
+def test_the_spec_version_the_converter_reports_is_the_installed_one():
+    """SPEC_VERSION reaches an operator inside every rejection message, so a
+    stale one names a version that was never published."""
+    assert radl.SPEC_VERSION == radl.config.SPEC_VERSION
+    assert radl.config.SPEC_VERSION.count(".") == 2
+
+
 # --- the round trip ---------------------------------------------------------
 def _exported_match(tmp_path):
     """A short traced match on disk: two possessions, a try, a conversion.
@@ -93,6 +114,34 @@ def _exported_match(tmp_path):
     export_raw(out, {"date": "2026-07-29", "competition": "Test"},
                m.team_names, m.events, m.actions)
     return m, out
+
+
+def _held_up_match(tmp_path):
+    """A carry into the in-goal, ruled held up by the chooser."""
+    m = fixtures.open_play_match(home="ENG", away="WAL", possession="away")
+    m.clock.start(t=0.0)
+    m.key_down("s", 0.5)                        # scrum to ENG, attacking +x
+    t = _trace(m, LEFT + 80 * PX, LEFT + 104 * PX, CENTRE_Y, 1.0, 0.9)
+    m.key_down("a", t)
+    m.choose_in_goal_outcome("held_up")
+    out = tmp_path / "ENG_v_WAL_heldup"
+    export_raw(out, {"date": "2026-07-29", "competition": "Test"},
+               m.team_names, m.events, m.actions)
+    return m, out
+
+
+def test_held_up_survives_the_round_trip_onto_the_carry_it_ended(tmp_path):
+    """contact_outcome's first producer, end to end. Before this the column was
+    null in every row of every export, and a held-up carry was indistinguishable
+    from any other attacking 5m scrum."""
+    _, out = _held_up_match(tmp_path)
+    frame = radl.read_match(out / "match.json")
+
+    held = frame[frame.contact_outcome == "held_up"]
+    assert len(held) == 1
+    assert held.iloc[0].action_type == "carry"
+    # independent of result: a carry held up over the line is not a failed carry
+    assert pd.isna(held.iloc[0].result)
 
 
 def test_export_writes_a_radl_frame(tmp_path):

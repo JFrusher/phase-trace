@@ -114,8 +114,11 @@ When a second arrives (Opta, Stats Perform, a tracking engine):
 
 ## Known gaps this work did not close
 
-- `phase_id`, `contact_outcome`, `freeze_frame` stay null. Nothing in a
-  top-down mouse trace can see a breakdown or a defensive shape.
+- `phase_id` and `freeze_frame` stay null: nothing in a top-down mouse trace can
+  see a phase count or a defensive shape. `contact_outcome` now carries exactly
+  one value, `held_up`, because the in-goal chooser makes it something the
+  operator *states* rather than something the geometry guesses. The other six
+  stay unproduced for the same reason as before.
 - Missed kicks at goal are still not recorded, so kicking accuracy is not
   computable (`conversion_missed` exists; there is no `penalty_kick_missed`).
 - `sin_bin` has no duration and there is no players-on-field count.

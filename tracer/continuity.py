@@ -53,7 +53,6 @@ class PlayChain:
     team: Literal["home", "away"]
     start_minute: float
     segments: list = field(default_factory=list)  # list[Segment]
-    ended_by: Literal["tackle_ruck", "whistle"] = "tackle_ruck"
 
     @property
     def t0(self) -> Optional[float]:

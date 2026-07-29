@@ -88,6 +88,49 @@ def test_choosing_held_up_takes_the_try_back():
     assert not [e for e in m.events if e["type"] == "try"]
 
 
+def _held_up(actions):
+    return [a for a in actions if a.get("contact_outcome") == "held_up"]
+
+
+def test_held_up_is_the_one_contact_outcome_this_producer_states():
+    """RADL's contact_outcome had no producer at all. held_up is the only value
+    the tracer can state rather than guess, and it used to be thrown away after
+    picking the 5m scrum -- leaving a held-up carry indistinguishable from any
+    other attacking scrum in the published frame."""
+    m = _match()
+    t = _trace(m, 90, 103)
+    m.key_down("a", t)
+    m.choose_in_goal_outcome("held_up")
+
+    stamped = _held_up(m.actions)
+    assert len(stamped) == 1
+    assert stamped[0] is m.actions[-1]           # the carry it ended
+    assert stamped[0]["type"] == "carry"
+
+
+def test_switching_away_from_held_up_clears_the_contact_outcome():
+    """The chooser rewinds and re-commits, so the stamp must not survive a
+    correction any more than the five points do."""
+    m = _match()
+    t = _trace(m, 90, 103)
+    m.key_down("a", t)
+    m.choose_in_goal_outcome("held_up")
+    assert _held_up(m.actions)
+
+    m.choose_in_goal_outcome("try")
+    assert not _held_up(m.actions)
+    assert compute_score(m.events, m.team_names) == {"home": 5, "away": 0}
+
+
+def test_undo_removes_the_held_up_action():
+    m = _match()
+    t = _trace(m, 90, 103)
+    m.key_down("a", t)
+    m.choose_in_goal_outcome("held_up")
+    m.undo_last()
+    assert not _held_up(m.actions)
+
+
 def test_choosing_try_after_a_drop_out_guess_scores_it():
     m = _match()
     t = _trace(m, 60, 103)                       # a kick into the in-goal

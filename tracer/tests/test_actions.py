@@ -6,6 +6,8 @@ a coach gets per-action detail. Player/flag fields are optional — a
 partially-tagged chain is still valid data.
 """
 
+import pytest
+
 from tracer import config, fixtures
 from tracer.continuity import PathPoint, PlayChain, PlayerTag, Segment
 from tracer.events import actor, assign_teams, chain_to_actions
@@ -126,6 +128,35 @@ def test_start_reason_absent_when_not_given():
 
 def test_empty_chain_yields_no_actions():
     assert chain_to_actions(make_chain([]), NAMES, attack_dir_home=1) == []
+
+
+def test_contact_outcome_lands_on_the_action_it_ended():
+    """It describes the contact that ended the possession, so it belongs on the
+    last action -- the mirror of start_reason on the first."""
+    acts = chain_to_actions(make_chain([
+        seg("CARRY", 80, 90, 100.0, 102.0),
+        seg("CARRY", 90, 103, 102.0, 104.0),
+    ]), NAMES, attack_dir_home=1, contact_outcome="held_up")
+    assert "contact_outcome" not in acts[0]
+    assert acts[1]["contact_outcome"] == "held_up"
+
+
+def test_contact_outcome_absent_when_not_given():
+    acts = chain_to_actions(make_chain([seg("CARRY", 90, 103, 100.0, 102.0)]),
+                            NAMES, attack_dir_home=1)
+    assert "contact_outcome" not in acts[0]
+
+
+@pytest.mark.parametrize("action", ["KICK", "PASS"])
+def test_only_a_carry_takes_a_contact_outcome(action):
+    """The in-goal chooser offers held-up whatever the last segment was, and you
+    cannot hold up a kick. The guard drops the nonsense pick rather than
+    publishing it."""
+    acts = chain_to_actions(make_chain([
+        seg("CARRY", 60, 80, 100.0, 102.0),
+        seg(action, 80, 103, 102.0, 103.0),
+    ]), NAMES, attack_dir_home=1, contact_outcome="held_up")
+    assert not [a for a in acts if "contact_outcome" in a]
 
 
 # --- MatchState wiring ------------------------------------------------------

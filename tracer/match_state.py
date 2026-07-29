@@ -352,7 +352,12 @@ class MatchState:
             start_reason=began_as, flip=flip)
         new_actions = chain_to_actions(
             chain, self.team_names, self.attack_dir_home, self.cal,
-            start_reason=began_as, flip=flip)
+            start_reason=began_as, flip=flip,
+            # the only contact outcome this producer can state. Everything else
+            # in RADL's vocabulary (ruck_won/lost, maul_*, offload) would be a
+            # guess: nothing in a top-down line says a ruck even formed.
+            contact_outcome=("held_up" if self.in_goal_choice == "held_up"
+                             else None))
         self._number_possessions(new_actions)
         self._number_chain_events(new_events, new_actions)
         self.events.extend(new_events)

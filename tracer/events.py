@@ -349,7 +349,8 @@ def set_piece_record(reason: str, feed_team: str, secured_team: str,
 
 def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
                      cal: PitchCalibration = PitchCalibration(),
-                     start_reason: str = None, flip: bool = False) -> list[dict]:
+                     start_reason: str = None, flip: bool = False,
+                     contact_outcome: str = None) -> list[dict]:
     """One dict per segment: the rich per-action stream for the raw export.
 
     Parallel to chain_to_events, which collapses segments into phase_sequences
@@ -367,6 +368,12 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
     frame and reports attack_dir in that same frame, so a team attacks the
     same way in the data all match. metres_gained / end_metres_from_line are
     computed from the live attack_dir and stay correct either way.
+
+    `contact_outcome` (RADL's column of the same name) describes the contact
+    that ENDED this possession, so it lands on the last action, mirroring
+    start_reason landing on the first. Only ever stamped on a CARRY: the in-goal
+    chooser offers held-up regardless of what the last segment was, and you
+    cannot hold up a kick.
     """
     if not chain.segments:
         return []
@@ -411,4 +418,6 @@ def chain_to_actions(chain, team_names: dict, attack_dir_home: int,
         out.append(ev)
     if out and start_reason:
         out[0]["start_reason"] = start_reason
+    if out and contact_outcome and chain.segments[-1].action == "CARRY":
+        out[-1]["contact_outcome"] = contact_outcome
     return out

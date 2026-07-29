@@ -58,6 +58,13 @@ downstream that didn't already fail there.
 `team.csv`, `positions.csv` — one row per carry, pass and kick, with pitch coordinates in metres.
 Every field is optional; a column is blank where nothing was tagged, which is the point.
 
+With the optional [RADL](https://github.com/ThatsNoicey/RADL) package installed (`pip install -e
+.[radl]`), the same bundle also gets `radl.csv`: the stream as a published
+[action frame](docs/radl-backend-roadmap.md), validated against RADL's closed vocabularies before it
+is written. RADL is the interchange boundary, not the tracer's in-memory model — `MatchState` holds
+pixels and chains, which is the right shape for something a mouse is still editing and the wrong
+shape for something an analyst reads.
+
 Open [`report/index.html`](report/) and pick that folder for a pitch map, a Gaussian-KDE heatmap
 (including where a team *conceded* penalties), team and player tables, and a momentum curve. No
 build step, no server, nothing leaves the machine. That curve is reconstructed and approximate —
@@ -103,7 +110,7 @@ Diagrams for each layer, with the reasoning and the trade-offs behind them, are 
 
 ## Tests
 
-326 tests, run on every push and pull request:
+355 tests, run on every push and pull request:
 
 ```bash
 python -m pytest -q

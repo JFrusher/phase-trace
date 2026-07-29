@@ -25,14 +25,25 @@ class PitchCalibration:
         return y_px / self.px_per_m
 
     def metres_gained(self, x0_px: float, x1_px: float, attack_dir: int) -> float:
-        """Net forward displacement along the attack axis, clamped >= 0."""
-        return max(0.0, round(attack_dir * (x1_px - x0_px) / self.px_per_m, 1))
+        """Net displacement along the attack axis. Signed: ground lost is negative.
+
+        Deliberately unclamped. A 12m backwards pass IS -12m, and clamping it
+        to 0.0 leaves the exported row contradicting the start_x_m/end_x_m
+        sitting beside it. Consumers that genuinely want "forward metres only"
+        (the momentum weight in translators/rugby.py) clamp at the point of
+        use, where the reason for clamping is visible.
+        """
+        return round(attack_dir * (x1_px - x0_px) / self.px_per_m, 1)
 
     def metres_from_line(self, x_px: float, attack_dir: int) -> float:
-        """Distance from the attacking try line, clamped to [0, 100]."""
+        """Distance from the attacking try line. Negative once over it.
+
+        Unclamped for the same reason as metres_gained: a try grounded 4m past
+        the line is at -4.0, not 0.0. in_own_22 and the momentum territory
+        factor clamp for themselves.
+        """
         fx = self.field_x_m(x_px)
-        dist = (config.PITCH_LENGTH_M - fx) if attack_dir > 0 else fx
-        return round(min(100.0, max(0.0, dist)), 1)
+        return round((config.PITCH_LENGTH_M - fx) if attack_dir > 0 else fx, 1)
 
     def end_metres_from_line(self, x_px: float, attack_dir: int) -> float:
         """Same measurement, under the name the exported field uses."""

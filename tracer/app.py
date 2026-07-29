@@ -97,10 +97,29 @@ def _do_export(m, path_in):
         ui.notify(f"exported {path_in.value}", type="positive")
 
 
+# TODO(radl-api): this is the only write boundary phase-trace has -- a button
+# that turns MatchState into files. An HTTP layer replaces the button, not the
+# boundary: serve RADL rows (radl.config.COLUMNS), ingest match.json through
+# radl.phase_trace.convert, and keep MatchState off the wire entirely. Pydantic
+# models, if wanted, belong on the request/response envelope and should be
+# generated from radl.config rather than restating it.
+# See docs/radl-backend-roadmap.md.
 def _do_data_export(m, data_dir):
-    path = export_raw(data_dir.value,
-                      {"date": m.date, "competition": m.competition},
-                      m.team_names, m.events, m.actions)
+    """Export, and say plainly if RADL rejected what was traced.
+
+    The CSVs and match.json are written before the RADL conversion runs, so a
+    rejection still leaves a complete export on disk -- it names a row whose
+    vocabulary is outside the published standard, which is a thing to go and fix
+    in the trace, not a reason to lose the export.
+    """
+    try:
+        path = export_raw(data_dir.value,
+                          {"date": m.date, "competition": m.competition},
+                          m.team_names, m.events, m.actions)
+    except ValueError as e:
+        ui.notify(f"files written, but RADL rejected the stream: {e}",
+                  type="negative", timeout=12000)
+        return
     ui.notify(f"data exported to {path}", type="positive")
 
 

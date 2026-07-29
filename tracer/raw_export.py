@@ -11,6 +11,10 @@ structure:
   team.csv       per-team scalar summary
   positions.csv  one row per located thing (x_m/y_m), for heatmaps
   match.json     meta + full action stream + both summaries
+  radl.csv       the same stream as a RADL action frame (radl installed only)
+
+match.json is the interchange file: it is what the RADL converter reads, and
+what report/ ingests. The CSVs are spreadsheet conveniences derived from it.
 
 Everything tolerates missing fields: a column is blank when a match never
 tagged that piece, which is the whole point — get out whatever was captured.
@@ -22,6 +26,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .events import compute_score
+from .radl_export import write_radl
 
 # points-scoring event types, for the per-team breakdown
 _SCORE_COUNT = {"try": "tries", "conversion": "conversions",
@@ -126,7 +131,13 @@ def _fold_event(s: dict, e: dict, summ: dict, other: dict):
 
 
 def team_summary(events: list[dict], actions: list[dict], team_names: dict) -> dict:
-    """Per-team totals, keyed by team name. Nested breakdowns for the JSON."""
+    """Per-team totals, keyed by team name. Nested breakdowns for the JSON.
+
+    `carry_metres` / `kick_metres` / `metres` are NET: metres_gained is signed
+    now, so a carry driven backwards subtracts. That is what the per-row data
+    says, and a total that disagreed with the rows it sums would be worse than
+    one that reads slightly low.
+    """
     summ = {name: _blank_team() for name in team_names.values()}
     other = {team_names["home"]: team_names["away"],
              team_names["away"]: team_names["home"]}
@@ -149,7 +160,8 @@ def team_summary(events: list[dict], actions: list[dict], team_names: dict) -> d
 
 
 # --- writers ----------------------------------------------------------------
-_ACTION_COLS = ["minute", "type", "team", "player", "kind", "outcome", "reason",
+_ACTION_COLS = ["minute", "period", "possession",
+                "type", "team", "player", "kind", "outcome", "reason",
                 "metres_gained", "start_x_m", "start_y_m", "end_x_m", "end_y_m",
                 "x_m", "y_m",   # single-point position for discrete events
                 "end_metres_from_line", "attack_dir", "start_reason",
@@ -157,7 +169,8 @@ _ACTION_COLS = ["minute", "type", "team", "player", "kind", "outcome", "reason",
                 "conceded_by", "assist", "label"]
 # positions.csv: every located thing as one point row. A carry/pass/kick uses
 # its start as the point (with its end kept), a discrete event its own x_m/y_m.
-_POSITION_COLS = ["minute", "type", "team", "conceded_by", "x_m", "y_m",
+_POSITION_COLS = ["minute", "period", "possession",
+                  "type", "team", "conceded_by", "x_m", "y_m",
                   "end_x_m", "end_y_m", "kind", "outcome", "reason", "label"]
 _PLAYER_COLS = ["team", "number", "carries", "carry_metres", "linebreaks",
                 "kicks", "kick_metres", "tries", "assists"]
@@ -194,7 +207,8 @@ def position_rows(stream: list[dict]) -> list[dict]:
         y = e.get("y_m", e.get("start_y_m"))
         if x is None or y is None:
             continue
-        rows.append({"minute": e.get("minute"), "type": e.get("type"),
+        rows.append({"minute": e.get("minute"), "period": e.get("period"),
+                     "possession": e.get("possession"), "type": e.get("type"),
                      "team": e.get("team"), "conceded_by": e.get("conceded_by"),
                      "x_m": x, "y_m": y,
                      "end_x_m": e.get("end_x_m"), "end_y_m": e.get("end_y_m"),
@@ -219,6 +233,13 @@ def export_raw(out_dir, meta: dict, team_names: dict,
     positions.csv is a spreadsheet convenience (one located point per row); the
     bundled report reads positions from the match.json action stream, not from
     this file.
+
+    Also writes radl.csv when the optional `radl` package is installed. The
+    RADL conversion happens last and validates against the published closed
+    vocabularies, so it can raise -- deliberately, and after every other file is
+    already on disk: a vocabulary violation means something was traced that RADL
+    cannot express, which the operator needs to see, and losing the rest of the
+    export to make that point would be a poor trade.
     """
     stream = action_stream(events, actions)
     players = player_rows(stream)
@@ -238,4 +259,5 @@ def export_raw(out_dir, meta: dict, team_names: dict,
         "summary": {"players": players, "team": _plain(team)},
     }
     (out / "match.json").write_text(json.dumps(payload, indent=1), encoding="utf-8")
+    write_radl(out)
     return str(out)

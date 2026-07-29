@@ -12,6 +12,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+# RADL is the published action-language schema phase-trace exports into. Kept
+# optional because it is a sibling checkout rather than a PyPI release today:
+#   pip install -e ../RADL
+# With it installed, every raw export also writes radl.csv and is validated
+# against RADL's closed vocabularies (tracer/radl_export.py).
+radl = ["radl"]
 
 [build-system]
 requires = ["setuptools>=68"]

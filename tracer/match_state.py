@@ -71,6 +71,12 @@ class MatchState:
         # shares one orientation with the first — heatmaps and per-team maps
         # aggregate across the whole match instead of splitting to both ends.
         self.canon_attack_dir_home = attack_dir_home
+        # Which period of the match is being traced. Incremented by
+        # halftime_flip, so extra time reads 3 and 4 rather than being folded
+        # back into 2. Stamped onto every row: the exported coordinates are
+        # folded into one orientation, so nothing downstream can recover the
+        # half from the data once it has been written.
+        self.period = 1
         self.cal = cal or PitchCalibration()
         self.clock = MatchClock()
         self.keystate = KeyState()
@@ -330,15 +336,24 @@ class MatchState:
         return scored_team, None
 
     def _emit_chain(self, chain, segments, began_as, try_team):
-        """Turn the committed chain into events, actions, set-piece + try records."""
+        """Turn the committed chain into events, actions, set-piece + try records.
+
+        Order matters: the traced actions are numbered and appended before the
+        set-piece record and the try are, because both of those read the current
+        possession back off the tail of self.actions (_stamp -> _tail_possession)
+        and would otherwise land in the previous one.
+        """
         flip = self._flipped()
         new_events = chain_to_events(
             chain, self.team_names, self.attack_dir_home, self.cal,
             start_reason=began_as, flip=flip)
-        self.events.extend(new_events)
-        self.actions.extend(chain_to_actions(
+        new_actions = chain_to_actions(
             chain, self.team_names, self.attack_dir_home, self.cal,
-            start_reason=began_as, flip=flip))
+            start_reason=began_as, flip=flip)
+        self._number_possessions(new_actions)
+        self._number_chain_events(new_events, new_actions)
+        self.events.extend(new_events)
+        self.actions.extend(new_actions)
         # a chain that BEGAN at a set piece records its outcome: the awarded
         # team (possession at mouse_down) fed it; chain.team came away with it
         sp = set_piece_record(began_as, self._chain_start_team, chain.team,
@@ -353,6 +368,23 @@ class MatchState:
             self._log_try(try_team, last.end_t, player=actor(last), assist=assist)
         self.last_summary = summarise(new_events, [s.action for s in segments])
         self._changed()
+
+    def _number_chain_events(self, new_events: list, new_actions: list):
+        """Give the chain's events the same period/possession as its actions.
+
+        Only turnover_won matters downstream -- phase_sequence is the momentum
+        view's bundle and never reaches the action stream -- and a turnover_won
+        is emitted at the first point of the run that gained the ball, so it
+        shares that run's team and minute. Matching on the pair is exact: the
+        interception and the sub-chain it starts are the same instant.
+        """
+        first_of_possession = {(a["team"], a["minute"]): a["possession"]
+                               for a in reversed(new_actions)}
+        for e in new_events:
+            e["period"] = self.period
+            if e.get("type") != "phase_sequence":
+                e["possession"] = first_of_possession.get(
+                    (e["team"], e["minute"]), self._tail_possession()[0] or 1)
 
     def reclassify_segment(self, i: int):
         """Click a drawn segment to cycle its action, then re-commit the chain.
@@ -611,13 +643,60 @@ class MatchState:
         mid-trace, else the last committed point. Position for a tapped event."""
         return self._pos_m(self._last_point())
 
-    def _stamp(self, ev, pos=None):
-        """Attach x_m/y_m to an event dict when a position is known.
+    ON_BALL_TYPES = ("carry", "pass", "kick")
 
-        Optional, like the existing label/player extras: an event tapped before
-        anything was traced simply carries no position, and every reader
-        tolerates its absence.
+    def _tail_possession(self):
+        """(possession id, team) of the last traced action still in the stream.
+
+        Read back from self.actions rather than held as a counter, which makes
+        the numbering undo-safe for nothing: undo_last truncates the list, and
+        the next chain simply resumes from whatever survived. Only on-ball rows
+        count -- a set piece or an error is attributed to the possession it sits
+        in and must not move the boundary.
+
+        ponytail: linear scan from the tail. A full match is a few hundred rows
+        and this runs once per chain; index the last on-ball row if that ever
+        stops being true.
         """
+        for a in reversed(self.actions):
+            if a.get("type") in self.ON_BALL_TYPES:
+                return a.get("possession", 0), a.get("team")
+        return 0, None
+
+    def _number_possessions(self, new_actions: list):
+        """Stamp period + possession id onto one chain's traced actions.
+
+        A possession ends when the ball changes hands (a kick or an intercepted
+        pass, already resolved into per-segment teams by events.assign_teams) or
+        when a new chain names how it began. Both facts are known here, so the
+        id is recorded rather than left for a reader to re-infer from the shape
+        of the stream.
+        """
+        pid, team = self._tail_possession()
+        for a in new_actions:
+            if a.get("start_reason") or a["team"] != team:
+                pid += 1
+                team = a["team"]
+            a["period"] = self.period
+            a["possession"] = pid
+
+    def _stamp(self, ev, pos=None):
+        """Attach period, possession, and x_m/y_m to a discrete row.
+
+        Position is only stamped for the types whose position means something
+        (config.LOCATED_EVENT_TYPES). A conversion or a card is logged by a
+        keystroke, so "where the ball was" is wherever the pointer had got to --
+        pointer noise, not data, and it used to reach the export and the heatmap
+        as if it were a location.
+
+        Everything here is optional, like the existing label/player extras: an
+        event tapped before anything was traced simply carries no position, and
+        every reader tolerates its absence.
+        """
+        ev["period"] = self.period
+        ev["possession"] = self._tail_possession()[0] or 1
+        if ev.get("type") not in config.LOCATED_EVENT_TYPES:
+            return ev
         pos = self._here_m() if pos is None else pos
         if pos is not None:
             ev["x_m"], ev["y_m"] = pos
@@ -704,6 +783,7 @@ class MatchState:
         half is folded back to the first-half frame.
         """
         self.attack_dir_home = -self.attack_dir_home
+        self.period += 1
         self.possession = _other(self.kickoff_team)
         self.pending_start_reason = "kickoff"
         self.armed_next_action = None
@@ -727,6 +807,7 @@ class MatchState:
             "kickoff_team": self.kickoff_team,
             "attack_dir_home": self.attack_dir_home,
             "canon_attack_dir_home": self.canon_attack_dir_home,
+            "period": self.period,
             "clock_seconds": self.clock.seconds(),
             "events": self.events,
             "actions": self.actions,
@@ -742,6 +823,9 @@ class MatchState:
         m.events = list(d["events"])
         m.actions = list(d.get("actions", []))   # absent in pre-overhaul sessions
         m.kickoff_team = d.get("kickoff_team", d["possession"])
+        # pre-RADL sessions have no period; they were traced before the field
+        # existed, so resuming one continues in period 1 rather than guessing
+        m.period = d.get("period", 1)
         # pre-overhaul sessions never flipped in the data; treat their current
         # orientation as canonical so nothing is spuriously folded on resume
         m.canon_attack_dir_home = d.get("canon_attack_dir_home", d["attack_dir_home"])

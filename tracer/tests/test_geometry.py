@@ -12,17 +12,19 @@ def test_field_x_round_trip():
     assert cal.field_x_m(LEFT + 37.5 * PX) == 37.5
 
 
-def test_metres_gained_forward_and_clamp():
+def test_metres_gained_is_signed():
     assert cal.metres_gained(LEFT, LEFT + 25 * PX, +1) == 25.0
-    assert cal.metres_gained(LEFT + 25 * PX, LEFT, +1) == 0.0   # net backward clamps
-    assert cal.metres_gained(LEFT + 25 * PX, LEFT, -1) == 25.0  # mirrored attack
+    assert cal.metres_gained(LEFT + 25 * PX, LEFT, +1) == -25.0  # ground lost stays negative
+    assert cal.metres_gained(LEFT + 25 * PX, LEFT, -1) == 25.0   # mirrored attack
 
 
-def test_end_metres_from_line_and_clamps():
+def test_end_metres_from_line_is_signed():
     assert cal.end_metres_from_line(LEFT + 92 * PX, +1) == 8.0
     assert cal.end_metres_from_line(LEFT + 92 * PX, -1) == 92.0
-    assert cal.end_metres_from_line(LEFT + 110 * PX, +1) == 0.0    # in-goal: clamp low
-    assert cal.end_metres_from_line(LEFT - 5 * PX, +1) == 100.0    # behind own line: clamp high
+    # past the attacking try line, and behind the defended one: both real
+    # positions, so both are reported rather than clamped into the field.
+    assert cal.end_metres_from_line(LEFT + 110 * PX, +1) == -10.0
+    assert cal.end_metres_from_line(LEFT - 5 * PX, +1) == 105.0
 
 
 def test_metres_from_line_measures_a_start_point_too():

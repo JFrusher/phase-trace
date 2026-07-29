@@ -36,6 +36,13 @@
     ok("territoryWeight(40,0,0) == 0.8", near(M.momentum.territoryWeight(40, 0, 0), 0.8));
     ok("territoryWeight(0,50,0) == 0.3", near(M.momentum.territoryWeight(0, 50, 0), 0.3));
     ok("territoryWeight(20,25,1) == 0.69", near(M.momentum.territoryWeight(20, 25, 1), 0.69));
+    // metres are SIGNED in the export now; the clamp lives here, matching
+    // translators/rugby.py. A possession that went backwards must weigh the
+    // same as one that gained nothing, not less.
+    ok("backwards metres clamp like zero",
+       near(M.momentum.territoryWeight(-30, 50, 0), M.momentum.territoryWeight(0, 50, 0)));
+    ok("past the try line clamps like on it",
+       near(M.momentum.territoryWeight(10, -4, 0), M.momentum.territoryWeight(10, 0, 0)));
 
     // gaussian blur: conserves mass and leaves a constant unchanged
     var flat = [5, 5, 5, 5, 5, 5, 5, 5];

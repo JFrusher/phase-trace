@@ -132,6 +132,15 @@ DISCRETE_EVENT_KEYS = {
 CARD_TYPES = ("sin_bin", "red_card")   # marker-only: never fed into the decay sum
 CONVERSION_KEYS = {"c": "conversion", "m": "conversion_missed"}
 
+# Discrete rows whose recorded position is where the thing actually happened.
+# Everything else a key can log -- a conversion, a card -- would be stamped
+# wherever the pointer happened to be at the keystroke, which is not a location
+# of anything, so it gets no coordinates at all (match_state._stamp). Mirrors
+# radl.config.LOCATED_EVENT_TYPES; tests/test_vocab_parity.py holds them equal.
+LOCATED_EVENT_TYPES = ("set_piece", "error", "try", "penalty_try",
+                       "penalty_won", "turnover_won", "penalty_kick",
+                       "drop_goal")
+
 # --- how a possession begins ----------------------------------------------
 # Type is never something the user corrects: it is either geometrically
 # certain (a kick finishing at a touchline is a lineout, a score is a restart)

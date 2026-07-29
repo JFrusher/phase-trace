@@ -142,6 +142,26 @@ def test_origin_scales_the_territory_weight():
     assert off_lineout > plain > off_restart
 
 
+def test_signed_metres_are_clamped_by_the_translator_not_the_data():
+    """Backwards possessions create no threat, and never negative threat.
+
+    geometry.py now reports signed metres, so the clamp that used to live in the
+    export lives here. A possession that lost 30m must weigh exactly the same as
+    one that gained nothing, and a try grounded 4m past the line must not push
+    territory_factor above 1.
+    """
+    at_zero = {"type": "phase_sequence", "team": "ENG", "minute": 5.0,
+               "metres_gained": 0.0, "end_metres_from_line": 40.0, "linebreaks": 0}
+    went_backwards = {**at_zero, "metres_gained": -30.0}
+    assert (RugbySport().translate([went_backwards])[0].weight
+            == RugbySport().translate([at_zero])[0].weight)
+
+    on_the_line = {**at_zero, "end_metres_from_line": 0.0}
+    over_the_line = {**at_zero, "end_metres_from_line": -4.0}
+    assert (RugbySport().translate([over_the_line])[0].weight
+            == RugbySport().translate([on_the_line])[0].weight)
+
+
 def test_unknown_origin_leaves_the_weight_alone():
     base = {"type": "phase_sequence", "team": "ENG", "minute": 5.0,
             "metres_gained": 20.0, "end_metres_from_line": 40.0, "linebreaks": 0}

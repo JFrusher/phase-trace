@@ -10,8 +10,8 @@ def test_error_key_logs_action_for_possessing_team():
     m = MatchState("ENG", "WAL")           # possession defaults to home
     m.clock.start(t=0.0)
     m.key_down("e", 60.0)                   # knock-on at 1'
-    assert m.actions == [{"type": "error", "kind": "knock_on",
-                          "team": "ENG", "minute": 1.0}]
+    assert m.actions == [{"type": "error", "kind": "knock_on", "team": "ENG",
+                          "minute": 1.0, "period": 1, "possession": 1}]
 
 
 def test_all_three_error_kinds_map():

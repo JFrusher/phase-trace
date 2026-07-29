@@ -14,6 +14,15 @@ from pathlib import Path
 SESSION_DIR = Path(__file__).parent / "sessions"
 SESSION_FILE = SESSION_DIR / "session.json"
 
+# TODO(radl-storage): a session file is NOT a RADL frame and should not become
+# one. It holds live tracer state -- possession, armed penalty option, clock,
+# attack direction, both event logs -- so that a crashed match can be resumed
+# mid-trace. RADL is the published record of a finished match; the two have
+# different lifetimes and different readers. When a database arrives it stores
+# exported action frames (see docs/radl-backend-roadmap.md), and this stays a
+# file: durable local scratch that survives the process, which is exactly what
+# crash recovery needs and what a remote DB is worst at.
+
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") or "team"

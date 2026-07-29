@@ -27,3 +27,11 @@ class BaseDataSource(ABC):
         Field names inside "events" are provider-specific -- only the Sport
         translator chosen for this match needs to understand them.
         """
+
+# TODO(radl-vendor): this interface feeds the MOMENTUM path (Sport translator ->
+# StandardEvent -> MomentumEngine), and a vendor feed should not be squeezed
+# through it to reach RADL. A converter from a real provider (Opta, Stats
+# Perform, a tracking engine) belongs in the radl package as a sibling of
+# radl/phase_trace.py, converting the raw feed straight to an action frame --
+# routing it through phase-trace's match.json would make every other producer
+# inherit phase-trace's quirks. See docs/radl-backend-roadmap.md.

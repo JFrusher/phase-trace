@@ -32,8 +32,12 @@
   // rugby.py _territory_weight. origin defaults to 1.0 (unknown start_reason,
   // or a pre-start_reason export).
   function territoryWeight(metres, endMFromLine, linebreaks, startReason) {
-    var territory = Math.max(0, 1 - endMFromLine / 100);
-    var base = 0.15 + 0.35 * Math.min(metres / 40, 1);
+    // metres_gained / end_metres_from_line arrive SIGNED in the export (ground
+    // lost is negative, past the try line is negative from it). Clamp here, the
+    // same way translators/rugby.py does, or this reconstruction drifts from
+    // the app's chart on any possession that went backwards.
+    var territory = 1 - Math.min(100, Math.max(0, endMFromLine)) / 100;
+    var base = 0.15 + 0.35 * Math.min(Math.max(0, metres) / 40, 1);
     var origin = ORIGIN_FACTOR[startReason] || 1.0;
     return Math.round(((base + 0.3 * territory) * (1 + 0.25 * linebreaks) * origin) * 100) / 100;
   }

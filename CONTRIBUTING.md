@@ -13,11 +13,24 @@ Python 3.11+.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest -q          # 326 tests, ~4 seconds
+pip install -e ../RADL          # optional; see below
+python -m pytest -q             # 355 tests, ~4 seconds
 ```
 
 CI runs the same `pytest -q` on every push and pull request, on 3.11. If it's
 green locally it should be green there.
+
+[RADL](https://github.com/ThatsNoicey/RADL) is the published action-language
+schema this project exports into. It is an optional dependency (`.[radl]`)
+because it is a sibling checkout rather than a PyPI release. Without it,
+`pytest -q` reports `342 passed, 1 skipped` — the skip is
+`tracer/tests/test_radl_contract.py`, 13 tests covering the export round trip
+and the parity checks that hold `tracer/config.py`'s vocabularies equal to
+RADL's. **Install it before changing any vocabulary constant**: those checks
+are the only thing standing between a new event type and a corpus that
+silently disagrees with the published standard. Everything else — including
+what the tracer stamps for RADL (`tracer/tests/test_radl.py`) — runs without
+it. See [docs/radl-backend-roadmap.md](docs/radl-backend-roadmap.md).
 
 ## Changing the recognizer
 

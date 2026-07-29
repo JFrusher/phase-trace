@@ -102,11 +102,17 @@ class RugbySport(BaseSport):
         drives territory_factor, and adding a second positional term without
         reference data to fit it against would be inventing signal.
         """
-        metres = ev.get("metres_gained", 0)
-        end_m_from_line = ev.get("end_metres_from_line", 50)
+        # both positional fields arrive signed (geometry.metres_gained /
+        # metres_from_line): ground lost is negative, and a position past the
+        # try line is negative metres from it. Threat energy has no meaning
+        # below zero -- a possession that went backwards created no threat, it
+        # did not create anti-threat -- so the clamp lives here, at the one
+        # place that wants it, rather than in the exported data.
+        metres = max(0.0, ev.get("metres_gained", 0))
+        end_m_from_line = min(100.0, max(0.0, ev.get("end_metres_from_line", 50)))
         linebreaks = ev.get("linebreaks", 0)
         origin = _WEIGHTS["origin_factor"].get(ev.get("start_reason"), 1.0)
-        territory_factor = max(0.0, 1 - end_m_from_line / 100)
+        territory_factor = 1 - end_m_from_line / 100
         base = 0.15 + 0.35 * min(metres / 40, 1.0)
         return round((base + 0.3 * territory_factor)
                      * (1 + 0.25 * linebreaks) * origin, 2)

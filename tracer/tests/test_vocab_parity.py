@@ -1,4 +1,10 @@
-"""Catch drift between config.py's event-type strings and the translator's vocabulary."""
+"""Catch drift between config.py's event-type strings and the translator's
+vocabulary.
+
+The parallel checks against RADL's published vocabularies live in
+test_radl_contract.py, which needs the optional `radl` package; this file must
+keep working without it.
+"""
 
 import json
 from pathlib import Path
@@ -55,3 +61,4 @@ def test_penalty_won_is_declared_not_defaulted():
 def test_tapped_start_reasons_are_part_of_the_vocabulary():
     for reason in config.TAPPED_START_REASONS.values():
         assert reason in config.START_REASONS, reason
+
